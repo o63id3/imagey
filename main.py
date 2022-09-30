@@ -30,7 +30,7 @@ class Cache:
         return self.capacity
 
 
-# Cache
+#! Cache
 cache = Cache(1000)
 
 
