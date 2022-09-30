@@ -1,0 +1,85 @@
+{% extends 'template.html' %} {% block content %}
+<div
+    class="text-center"
+    style="
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 50px;
+    "
+>
+    <div
+        style="
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2),
+                0 6px 20px 0 rgba(0, 0, 0, 0.19);
+            border-radius: 30px;
+            width: 50%;
+            background-color: rgb(33, 37, 41);
+            padding: 100px;
+            padding-bottom: 50px;
+            padding-top: 50px;
+            color: bisque;
+        "
+    >
+        <p style="margin-bottom: 50px; font-size: 30px; font-weight: bold">
+            Cache control
+        </p>
+        <form action="">
+            <div class="input-group mb-3">
+                <input
+                    type="number"
+                    name="cache-size"
+                    class="form-control"
+                    placeholder="Cache size"
+                    min="1"
+                    max="4096"
+                    value="10"
+                    required
+                />
+                <span class="input-group-text">MB</span>
+            </div>
+
+            <div class="input-group mb-3">
+                <label class="input-group-text">Replace policy</label>
+                <select class="form-select">
+                    <option disabled selected value>
+                        -- select a policy --
+                    </option>
+                    <option value="0">Random Replacement</option>
+                    <option value="1">Least Recently Used</option>
+                </select>
+            </div>
+
+            <div class="form-check form-switch mb-3">
+                <input
+                    class="form-check-input danger"
+                    type="checkbox"
+                    role="switch"
+                />
+                <label class="form-check-label" for="flexSwitchCheckDefault"
+                    >Clear cache</label
+                >
+            </div>
+
+            <div class="mb-3">
+                <button
+                    type="submit"
+                    style="
+                        width: 100%;
+                        height: 40px;
+                        border-radius: 10px;
+                        background-color: bisque;
+                        font-weight: bold;
+                    "
+                >
+                    Submit
+                </button>
+            </div>
+        </form>
+
+        <a href="/get" style="font-size: small" class="badge badge-info"
+            >Get image?</a
+        >
+    </div>
+</div>
+{% endblock %}

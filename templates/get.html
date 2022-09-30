@@ -1,0 +1,100 @@
+{% extends 'template.html' %} {% block content %}
+<div
+    class="text-center"
+    style="
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 50px;
+    "
+>
+    <div
+        style="
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2),
+                0 6px 20px 0 rgba(0, 0, 0, 0.19);
+            border-radius: 30px;
+            width: 50%;
+            background-color: rgb(33, 37, 41);
+            padding: 100px;
+            padding-bottom: 50px;
+            padding-top: 50px;
+            color: bisque;
+        "
+    >
+        <p style="margin-bottom: 50px; font-size: 30px; font-weight: bold">
+            Get image
+        </p>
+
+        <form action="/get" method="POST">
+            <div class="hash mb-3">
+                <input
+                    type="text"
+                    name="hash"
+                    id="hash"
+                    class="form-control"
+                    placeholder="Hash key"
+                    aria-label="Hash key"
+                    required
+                    value="{% if hash %}{{ hash }}{% endif %}"
+                />
+            </div>
+
+            <div class="mb-3">
+                <button
+                    type="submit"
+                    style="
+                        width: 100%;
+                        height: 40px;
+                        border-radius: 10px;
+                        background-color: bisque;
+                        font-weight: bold;
+                    "
+                    onclick="getImage()"
+                >
+                    Get
+                </button>
+            </div>
+        </form>
+
+        {% if message %}
+        <p style="color: red; font-weight: bold">{{ message }}</p>
+        {% endif %}
+
+        <a href="./add" style="font-size: small" class="badge badge-info"
+            >Add image?</a
+        >
+    </div>
+</div>
+
+<!-- Modal -->
+<div
+    class="modal fade"
+    id="ImageModal"
+    tabindex="-1"
+    role="dialog"
+    aria-labelledby="ImageModalTitle"
+    aria-hidden="true"
+>
+    <div class="modal-lg modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Image ({{ hash }})</h5>
+            </div>
+            <div
+                class="modal-body"
+                style="justify-content: center; display: flex"
+            >
+                <img src="{{ image }}" width="700" />
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    window.addEventListener("load", (event) => {
+        {% if image %}
+            $('#ImageModal').modal('show')
+        {% endif %}
+    });
+</script>
+{% endblock %}

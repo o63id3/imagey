@@ -1,0 +1,102 @@
+{% extends 'template.html' %} {% block content %}
+<section>
+    <div class="container marketing">
+        <!-- Three columns of text below the carousel -->
+        <div class="row">
+            <div class="col-lg-4">
+                <a href="/add">
+                    <svg
+                        class="bd-placeholder-img rounded-circle"
+                        width="140"
+                        height="140"
+                        xmlns="http://www.w3.org/2000/svg"
+                        role="img"
+                        aria-label="Placeholder: 140x140"
+                        preserveAspectRatio="xMidYMid slice"
+                        focusable="false"
+                        style="
+                            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2),
+                                0 6px 20px 0 rgba(0, 0, 0, 0.19);
+                        "
+                    >
+                        <image
+                            width="140"
+                            height="140"
+                            href="{{ url_for('static', filename='images/add-get.jpg') }}"
+                            clip-path="url(#circleView)"
+                        />
+                    </svg>
+                </a>
+
+                <h2 class="fw-normal">Add & Get</h2>
+                <p>
+                    <p>this is index: {{ counter }}</p>
+                    Add a new pair of image and a key, and retrieve an existing
+                    image via the key.
+                </p>
+            </div>
+
+            <div class="col-lg-4">
+                <a href="/control">
+                    <svg
+                        class="bd-placeholder-img rounded-circle"
+                        width="140"
+                        height="140"
+                        xmlns="http://www.w3.org/2000/svg"
+                        role="img"
+                        aria-label="Placeholder: 140x140"
+                        preserveAspectRatio="xMidYMid slice"
+                        focusable="false"
+                        style="
+                            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2),
+                                0 6px 20px 0 rgba(0, 0, 0, 0.19);
+                        "
+                    >
+                        <image
+                            width="140"
+                            height="140"
+                            href="/static/images/control.jpg"
+                            clip-path="url(#circleView)"
+                        />
+                    </svg>
+                </a>
+
+                <h2 class="fw-normal">Control</h2>
+                <p>
+                    Select a replacement algorithm and cache size, and clear the
+                    cache.
+                </p>
+            </div>
+
+            <div class="col-lg-4">
+                <a href="/statistics">
+                    <svg
+                        class="bd-placeholder-img rounded-circle"
+                        width="140"
+                        height="140"
+                        xmlns="http://www.w3.org/2000/svg"
+                        role="img"
+                        aria-label="Placeholder: 140x140"
+                        preserveAspectRatio="xMidYMid slice"
+                        focusable="false"
+                        style="
+                            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2),
+                                0 6px 20px 0 rgba(0, 0, 0, 0.19);
+                        "
+                    >
+                        <image
+                            width="140"
+                            height="140"
+                            href="{{ url_for('static', filename='images/statistics.jpg') }}"
+                            clip-path="url(#circleView)"
+                        />
+                    </svg>
+                </a>
+
+                <h2 class="fw-normal">Statistics</h2>
+                <p>Visualize cache statistics over the past 10 minutes.</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

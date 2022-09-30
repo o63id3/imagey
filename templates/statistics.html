@@ -1,0 +1,73 @@
+{% extends 'template.html' %} {% block content %}
+<div
+    class="text-center"
+    style="
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 50px;
+    "
+>
+    <div
+        style="
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2),
+                0 6px 20px 0 rgba(0, 0, 0, 0.19);
+            border-radius: 30px;
+            width: 50%;
+            background-color: rgb(33, 37, 41);
+            padding: 100px;
+            padding-bottom: 50px;
+            padding-top: 50px;
+            color: bisque;
+        "
+    >
+        <p style="margin-bottom: 50px; font-size: 30px; font-weight: bold">
+            Cache statistics
+        </p>
+
+        <div class="input-group mb-3">
+            <span class="input-group-text">Hit rate</span>
+            <input type="number" class="form-control" value="{{
+            statistics["hit_rate"] }}" disabled readonly style="color: green;
+            font-weight: bold" />
+            <span class="input-group-text">%</span>
+        </div>
+
+        <div class="input-group mb-3">
+            <span class="input-group-text">Miss rate</span>
+            <input type="number" class="form-control" value="{{
+            statistics["miss_rate"] }}" disabled readonly style="color: red;
+            font-weight: bold" />
+            <span class="input-group-text">%</span>
+        </div>
+
+        <div class="input-group mb-3">
+            <span class="input-group-text">Number of items</span>
+            <input type="number" class="form-control" value="{{
+            statistics["number_of_items"] }}" disabled readonly style="color:
+            green; font-weight: bold" />
+            <span class="input-group-text">item</span>
+        </div>
+
+        <div class="input-group mb-3">
+            <span class="input-group-text">Total size</span>
+            <input type="number" class="form-control" value="{{
+            statistics["total_size"] }}" disabled readonly style="color: green;
+            font-weight: bold" />
+            <span class="input-group-text">MB</span>
+        </div>
+
+        <div class="input-group mb-3">
+            <span class="input-group-text">Total requests</span>
+            <input type="number" class="form-control"
+            value="{{statistics["number_of_requests"] }}" disabled readonly
+            style="color: green; font-weight: bold" />
+            <span class="input-group-text">request</span>
+        </div>
+
+        <a href="./control" style="font-size: small" class="badge badge-info"
+            >Change cache settings?</a
+        >
+    </div>
+</div>
+{% endblock %}

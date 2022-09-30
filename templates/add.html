@@ -1,0 +1,72 @@
+{% extends 'template.html' %} {% block content %}
+<div
+    class="text-center"
+    style="
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 50px;
+    "
+>
+    <div
+        style="
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2),
+                0 6px 20px 0 rgba(0, 0, 0, 0.19);
+            border-radius: 30px;
+            width: 50%;
+            background-color: rgb(33, 37, 41);
+            padding: 100px;
+            padding-bottom: 50px;
+            padding-top: 50px;
+            color: bisque;
+        "
+    >
+        <p style="margin-bottom: 50px; font-size: 30px; font-weight: bold">
+            Add image
+        </p>
+        <form action="/add" method="POST" enctype="multipart/form-data">
+            <div class="hash mb-3">
+                <input
+                    type="text"
+                    name="hash"
+                    class="form-control"
+                    placeholder="Hash key"
+                    aria-label="Hash key"
+                    aria-describedby="button-addon2"
+                    required
+                />
+            </div>
+
+            <div class="image mb-3">
+                <input
+                    type="file"
+                    name="image"
+                    class="form-control"
+                    id="image"
+                    accept="image/*"
+                    required
+                />
+            </div>
+
+            <div class="image mb-3">
+                <button
+                    type="submit"
+                    style="
+                        width: 100%;
+                        height: 40px;
+                        border-radius: 10px;
+                        background-color: bisque;
+                        font-weight: bold;
+                    "
+                >
+                    Add
+                </button>
+            </div>
+        </form>
+
+        <a href="/get" style="font-size: small" class="badge badge-info"
+            >Get image?</a
+        >
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends 'template.html' %} {% block content %}
+<div
+    class="text-center"
+    style="
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 50px;
+    "
+>
+    <div
+        style="
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2),
+                0 6px 20px 0 rgba(0, 0, 0, 0.19);
+            border-radius: 30px;
+            width: 50%;
+            background-color: rgb(33, 37, 41);
+            padding: 100px;
+            padding-bottom: 50px;
+            padding-top: 50px;
+            color: bisque;
+        "
+    >
+        <p style="margin-bottom: 25px; font-size: 30px; font-weight: bold">
+            All Keys
+        </p>
+
+        {% if keys %}
+        <table class="table" style="color: white">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Hash</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for key in keys %}
+                <tr>
+                    <th scope="row">{{ key['id'] }}</th>
+                    <td>{{ key['hash'] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% else %}
+        <p style="font-size: larger; font-weight: bold; color: red">
+            No keys found!
+        </p>
+        {% endif %}
+
+        <a href="/add" style="font-size: small" class="badge badge-info"
+            >Add image?</a
+        >
+    </div>
+</div>
+{% endblock %}
