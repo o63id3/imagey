@@ -132,7 +132,7 @@ def show():
             cursor.execute(sql)
             #! end test
             
-            # If hash does not exist redirct to same page with error
+            # If hash exists redirct to same page with the image
             sql = f"select image from images where hash='{hash}'"
             cursor.execute(sql)
             image = f"/static/uploaded images/{cursor.fetchall()[0][0]}"
