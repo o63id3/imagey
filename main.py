@@ -10,6 +10,9 @@ class Cache:
     def __init__(self, capacity: int):
         self.cache = dict()
         self.capacity = capacity
+        self.size = 0
+        self.hit_count = 0
+        self.miss_count = 0
     
     def get(self, key: int) -> int:
         pass
