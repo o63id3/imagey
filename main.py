@@ -113,25 +113,19 @@ def show():
         cursor.execute(sql)
         
         if cursor.fetchall()[0][0] == 0:
-            # Store request to database as NOT_FOUND request
-            sql = f"INSERT INTO requests (hash, status) VALUES ('{hash}', 'NOT_FOUND')"
-            cursor.execute(sql)
+            # # Store request to database as NOT_FOUND request
+            # sql = f"INSERT INTO requests (hash, status) VALUES ('{hash}', 'NOT_FOUND')"
+            # cursor.execute(sql)
             
-            # Commit changes
-            conn.commit()
+            # # Commit changes
+            # conn.commit()
             
-            # Close connection
-            conn.close()
+            # # Close connection
+            # conn.close()
             
             # If hash does not exist redirct to same page with error message
             return render_template("get.html", hash=hash, message="Hash not found!")
-        else:
-            #! This is test
-            # Store request to database as NOT_FOUND request
-            sql = f"INSERT INTO requests (hash, status) VALUES ('{hash}', 'HIT')"
-            cursor.execute(sql)
-            #! end test
-            
+        else:          
             # If hash exists redirct to same page with the image
             sql = f"select image from images where hash='{hash}'"
             cursor.execute(sql)
@@ -183,44 +177,44 @@ def control():
 
 @app.route('/statistics', methods=['GET'])
 def statistics():
-    # Connect to database
-    conn = connection()
+    # # Connect to database
+    # conn = connection()
     
-    # Create new cursor
-    cursor = conn.cursor()
+    # # Create new cursor
+    # cursor = conn.cursor()
     
-    statistics = {}
+    # statistics = {}
     
-    #? Get total requests without NOT_FOUND
-    sql = "select count(*) from requests where status!='NOT_FOUND'"
-    cursor.execute(sql)
-    total_reauests = cursor.fetchall()[0][0]
+    # #? Get total requests without NOT_FOUND
+    # sql = "select count(*) from requests where status!='NOT_FOUND'"
+    # cursor.execute(sql)
+    # total_reauests = cursor.fetchall()[0][0]
     
-    if total_reauests == 0:
-        #? Get hit rate
-        statistics["hit_rate"] = 100
+    # if total_reauests == 0:
+    #     #? Get hit rate
+    #     statistics["hit_rate"] = 100
     
-        #? Get miss rate
-        statistics["miss_rate"] = 0
-    else:
-        #? Get hit rate
-        sql = "select count(*) from requests where status='HIT'"
-        cursor.execute(sql)
-        statistics["hit_rate"] = "{0:.2f}".format(cursor.fetchall()[0][0] / total_reauests * 100)
+    #     #? Get miss rate
+    #     statistics["miss_rate"] = 0
+    # else:
+    #     #? Get hit rate
+    #     sql = "select count(*) from requests where status='HIT'"
+    #     cursor.execute(sql)
+    #     statistics["hit_rate"] = "{0:.2f}".format(cursor.fetchall()[0][0] / total_reauests * 100)
     
-        #? Get miss rate
-        statistics["miss_rate"] = 100 - float(statistics["hit_rate"])
+    #     #? Get miss rate
+    #     statistics["miss_rate"] = 100 - float(statistics["hit_rate"])
     
-    #! Get number of items
-    statistics["number_of_items"] = 30
+    # #! Get number of items
+    # statistics["number_of_items"] = 30
     
-    #! Get total size of the cache
-    statistics["total_size"] = cache.getCapacity()
+    # #! Get total size of the cache
+    # statistics["total_size"] = cache.getCapacity()
     
-    #? Get number of requests
-    sql = "select count(*) from requests"
-    cursor.execute(sql)
-    statistics["number_of_requests"] = cursor.fetchall()[0][0]
+    # #? Get number of requests
+    # sql = "select count(*) from requests"
+    # cursor.execute(sql)
+    # statistics["number_of_requests"] = cursor.fetchall()[0][0]
     
     # Show statistics page
     return render_template("statistics.html", statistics=statistics)
