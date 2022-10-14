@@ -156,7 +156,7 @@ class Cache:
             conn = connection()
 
             cursor = conn.cursor()
-            sql = f"INSERT INTO `statistics`(`hit`, `miss`, `number_of_items`, `total_size`, `number_of_requests_served`) VALUES ('{self.hit_count}','{self.miss_count}','{len(self.cache)}','{self.getFullSpace()}, '{self.number_of_requests_served}')"
+            sql = f"INSERT INTO `statistics`(`hit`, `miss`, `number_of_items`, `total_size`, `number_of_requests_served`) VALUES ('{self.hit_count}','{self.miss_count}','{len(self.cache)}','{self.getFullSpace()}','{self.number_of_requests_served}')"
             cursor.execute(sql)
 
             # Commit changes
@@ -320,10 +320,29 @@ def control():
     if request.method == 'POST':
         # Get post request parameters
         cache_size = int(request.form["cache-size"])
-        cache.setSize(cache_size)
+        if int(request.form["replace-policy"]) == 0:
+            replacement = "LRU"
+        else:
+            replacement = "RANDOM"
 
-        replacement = int(request.form["replace-policy"])
-        cache.setReplacment(replacement)
+        # Connect to database
+        conn = connection()
+
+        # Create new cursor
+        cursor = conn.cursor()
+
+        cursor.execute(
+            f"INSERT INTO `cache`(`size`, `replace_policy`) VALUES ('{cache_size}','{replacement}')"
+        )
+
+        # Commit changes
+        conn.commit()
+
+        # Close connection
+        conn.close()
+
+        # Refresh
+        cache.refreshConfiguration()
 
         return redirect(url_for("statistics"))
 
@@ -347,8 +366,6 @@ def statistics():
     cursor.execute(sql)
 
     if cursor.fetchone()[0] > 0:
-        print("hi")
-
         # Get hit and miss rate
         sql = "SELECT SUM(hit), SUM(miss) from statistics where created_at >= date_sub(now(), interval 10 minute)"
         cursor.execute(sql)
