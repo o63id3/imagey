@@ -29,31 +29,14 @@ class Cache:
         self.miss_count = 0
         self.replacment_policy = 0
         self.number_of_items = 0
+        self.number_of_requests_served = 0
 
-        # Connect to database
-        conn = connection()
-
-        cursor = conn.cursor()
-        sql = f"SELECT count(*) FROM `cache`"
-        cursor.execute(sql)
-
-        if cursor.fetchone()[0] != 0:
-            sql = f"SELECT size, replace_policy FROM `cache` where created_at = (SELECT MAX(created_at) FROM cache)"
-            cursor.execute(sql)
-
-            row = cursor.fetchone()
-
-            self.capacity = row[0] * 1024 * 1024
-            self.size = row[0] * 1024 * 1024
-            if row[1] == "LRU":
-                self.replacment_policy = 0
-            else:
-                self.replacment_policy = 1
-
-        # Push statistics every 5 sec
+        self.refreshConfiguration()
         threading.Timer(5.0, self.storeStatistics).start()
 
     def get(self, key: str) -> str:
+        self.number_of_requests_served = self.number_of_requests_served + 1
+
         # If key exists in cache
         if key in self.cache:
             self.hit_count = self.hit_count + 1
@@ -115,16 +98,16 @@ class Cache:
                           key=(lambda k: self.cache[k]["LastTimeUsed"]))
 
                 # Delete the item
-                self.delete(key)
+                self.invalidateKey(key)
             # Random
             else:
                 # Get random key
                 key = random.choice(list(self.cache.keys()))
 
                 # Delete the item
-                self.delete(key)
+                self.invalidateKey(key)
 
-    def delete(self, key: str) -> None:
+    def invalidateKey(self, key: str) -> None:
         if key in self.cache:
             # Get file size in Bytes
             fileSize = os.path.getsize(self.cache[key]["path"])
@@ -175,7 +158,7 @@ class Cache:
             conn = connection()
 
             cursor = conn.cursor()
-            sql = f"INSERT INTO `statistics`(`hit`, `miss`, `number_of_items`, `free_space`) VALUES ('{self.hit_count}','{self.miss_count}','{len(self.cache)}','{self.getFreeSpace}')"
+            sql = f"INSERT INTO `statistics`(`hit`, `miss`, `number_of_items`, `total_size`, `number_of_requests_served`) VALUES ('{self.hit_count}','{self.miss_count}','{len(self.cache)}','{self.getFullSpace()}, '{self.number_of_requests_served}')"
             cursor.execute(sql)
 
             # Commit changes
@@ -188,6 +171,7 @@ class Cache:
             self.hit_count = 0
             self.miss_count = 0
             self.number_of_items = len(self.cache)
+            self.number_of_requests_served = 0
 
         self.scheduler()
 
@@ -204,6 +188,27 @@ class Cache:
         print(
             "============================================================================================================================"
         )
+
+    def refreshConfiguration(self, ):
+        # Connect to database
+        conn = connection()
+
+        cursor = conn.cursor()
+        sql = f"SELECT count(*) FROM `cache`"
+        cursor.execute(sql)
+
+        if cursor.fetchone()[0] != 0:
+            sql = f"SELECT size, replace_policy FROM `cache` where created_at = (SELECT MAX(created_at) FROM cache)"
+            cursor.execute(sql)
+
+            row = cursor.fetchone()
+
+            self.capacity = row[0] * 1024 * 1024
+            self.size = row[0] * 1024 * 1024
+            if row[1] == "LRU":
+                self.replacment_policy = 0
+            else:
+                self.replacment_policy = 1
 
 
 # Cache
