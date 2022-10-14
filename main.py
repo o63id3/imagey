@@ -77,8 +77,11 @@ class Cache:
                 # Get image size in Bytes
                 fileSize = os.path.getsize(value)
 
+                if fileSize > self.size:
+                    return
+
                 # If cache has no free space replace
-                if self.capacity - fileSize < 0:
+                while self.capacity - fileSize < 0:
                     self.replace()
 
                 self.cache[key] = {
