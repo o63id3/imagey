@@ -374,11 +374,16 @@ def statistics():
 
         row = cursor.fetchone()
 
-        #? Get hit rate
-        statistics["hit_rate"] = round((row[0] / (row[0] + row[1])) * 100, 2)
+        if row[0] == 0 and row[1] == 0:
+            statistics["hit_rate"] = "?"
+            statistics["miss_rate"] = "?"
+        else:
+            #? Get hit rate
+            statistics["hit_rate"] = round((row[0] / (row[0] + row[1])) * 100,
+                                           2)
 
-        #? Get miss rate
-        statistics["miss_rate"] = round(100 - statistics["hit_rate"], 2)
+            #? Get miss rate
+            statistics["miss_rate"] = round(100 - statistics["hit_rate"], 2)
     else:
         statistics["hit_rate"] = "?"
         statistics["miss_rate"] = "?"
