@@ -65,8 +65,6 @@ class Cache:
                 hash = row[0]
                 path = f"static/uploaded images/{row[1]}"
 
-                print(path)
-
                 self.put(hash, path)
 
                 return path
