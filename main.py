@@ -1,3 +1,4 @@
+from asyncio.windows_events import NULL
 from dataclasses import replace
 import os
 import random
@@ -393,6 +394,15 @@ def statistics():
         statistics["replace-policy"] = "LRU"
     else:
         statistics["replace-policy"] = "Random"
+
+    #? Get number of requests
+    sql = "SELECT sum(number_of_requests_served) from statistics where created_at >= date_sub(now(), interval 10 minute)"
+    cursor.execute(sql)
+
+    statistics["number_of_requests"] = cursor.fetchone()[0]
+
+    # Close connection
+    conn.close()
 
     # Show statistics page
     return render_template("statistics.html", statistics=statistics)
