@@ -92,7 +92,6 @@ class Cache:
         if key not in self.cache:
             # If image exists
             if os.path.exists(value):
-                print("hi")
                 # Get image size in Bytes
                 fileSize = os.path.getsize(value)
 
@@ -343,8 +342,6 @@ def statistics():
     cursor.execute(sql)
 
     if cursor.fetchone()[0] > 0:
-        print("hi")
-
         # Get hit and miss rate
         sql = "SELECT SUM(hit), SUM(miss) from statistics where created_at >= date_sub(now(), interval 10 minute)"
         cursor.execute(sql)
@@ -367,7 +364,7 @@ def statistics():
     statistics["total_size"] = cache.getSize()
 
     #? Get Free Space in cache
-    statistics["free_space"] = cache.getFreeSpace()
+    statistics["free_space"] = round(cache.getFreeSpace(), 2)
 
     #? Get replace policy
     if cache.getReplacePolicy() == 0:
