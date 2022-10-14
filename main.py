@@ -273,7 +273,6 @@ def show():
         cache.state()
 
         if path == "":
-            print("hi")
             return render_template("get.html",
                                    hash=hash,
                                    message="Hash not found!")
