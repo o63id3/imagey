@@ -27,7 +27,7 @@
 
         <div class="input-group mb-3">
             <span class="input-group-text">Hit rate</span>
-            <input type="number" class="form-control" value="{{
+            <input type="text" class="form-control" value="{{
             statistics["hit_rate"] }}" disabled readonly style="color: green;
             font-weight: bold" />
             <span class="input-group-text">%</span>
@@ -35,7 +35,7 @@
 
         <div class="input-group mb-3">
             <span class="input-group-text">Miss rate</span>
-            <input type="number" class="form-control" value="{{
+            <input type="text" class="form-control" value="{{
             statistics["miss_rate"] }}" disabled readonly style="color: red;
             font-weight: bold" />
             <span class="input-group-text">%</span>
@@ -58,11 +58,18 @@
         </div>
 
         <div class="input-group mb-3">
-            <span class="input-group-text">Total requests</span>
+            <span class="input-group-text">Free space</span>
             <input type="number" class="form-control"
-            value="{{statistics["number_of_requests"] }}" disabled readonly
+            value="{{statistics["free_space"] }}" disabled readonly
             style="color: green; font-weight: bold" />
-            <span class="input-group-text">request</span>
+            <span class="input-group-text">MB</span>
+        </div>
+
+        <div class="input-group mb-3">
+            <span class="input-group-text">Replace policy</span>
+            <input type="text" class="form-control"
+            value="{{statistics["replace-policy"] }}" disabled readonly
+            style="color: green; font-weight: bold" />
         </div>
 
         <a href="./control" style="font-size: small" class="badge badge-info"

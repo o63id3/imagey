@@ -24,7 +24,7 @@
         <p style="margin-bottom: 50px; font-size: 30px; font-weight: bold">
             Cache control
         </p>
-        <form action="">
+        <form action="/control" method="POST">
             <div class="input-group mb-3">
                 <input
                     type="number"
@@ -41,25 +41,26 @@
 
             <div class="input-group mb-3">
                 <label class="input-group-text">Replace policy</label>
-                <select class="form-select">
+                <select class="form-select" name="replace-policy" required>
                     <option disabled selected value>
                         -- select a policy --
                     </option>
-                    <option value="0">Random Replacement</option>
-                    <option value="1">Least Recently Used</option>
+                    <option value="1">Random Replacement</option>
+                    <option value="0">Least Recently Used</option>
                 </select>
             </div>
 
-            <div class="form-check form-switch mb-3">
+            <!-- <div class="form-check form-switch mb-3">
                 <input
                     class="form-check-input danger"
+                    name="is-clear"
                     type="checkbox"
                     role="switch"
                 />
                 <label class="form-check-label" for="flexSwitchCheckDefault"
                     >Clear cache</label
                 >
-            </div>
+            </div> -->
 
             <div class="mb-3">
                 <button
@@ -73,6 +74,23 @@
                     "
                 >
                     Submit
+                </button>
+            </div>
+        </form>
+
+        <form action="/clear" method="POSt">
+            <div class="mb-3">
+                <button
+                    class="btn btn-danger"
+                    type="submit"
+                    style="
+                        width: 100%;
+                        height: 40px;
+                        border-radius: 10px;
+                        font-weight: bold;
+                    "
+                >
+                    Clear cache
                 </button>
             </div>
         </form>
