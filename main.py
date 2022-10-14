@@ -270,10 +270,8 @@ def show():
 
         # Get the path from the cache
         path = cache.get(hash)
-
-        print(path)
-
         cache.state()
+
         if path == "":
             print("hi")
             return render_template("get.html",
