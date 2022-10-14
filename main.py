@@ -90,6 +90,8 @@ class Cache:
 
     def put(self, key: str, value: str) -> None:
         if key not in self.cache:
+            print("hi")
+
             # If image exists
             if os.path.exists(value):
                 # Get image size in Bytes
@@ -154,7 +156,7 @@ class Cache:
         return (self.size - self.capacity) / 1024 / 1024
 
     def getFreeSpace(self, ) -> int:
-        return (self.size - self.getFullSpace()) / 1024 / 1024
+        return (self.size - (self.size - self.capacity)) / 1024 / 1024
 
     def getNumberOfItems(self, ) -> int:
         return len(self.cache)
@@ -364,7 +366,7 @@ def statistics():
     statistics["total_size"] = cache.getSize()
 
     #? Get Free Space in cache
-    statistics["free_space"] = round(cache.getFreeSpace(), 2)
+    statistics["free_space"] = cache.getFreeSpace()
 
     #? Get replace policy
     if cache.getReplacePolicy() == 0:
