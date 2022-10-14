@@ -80,7 +80,9 @@ class Cache:
                 row = cursor.fetchone()
 
                 hash = row[0]
-                path = f"/static/uploaded images/{row[1]}"
+                path = f"static/uploaded images/{row[1]}"
+
+                print(path)
 
                 self.put(hash, path)
 
@@ -90,6 +92,7 @@ class Cache:
         if key not in self.cache:
             # If image exists
             if os.path.exists(value):
+                print("hi")
                 # Get image size in Bytes
                 fileSize = os.path.getsize(value)
 
@@ -270,7 +273,6 @@ def show():
 
         # Get the path from the cache
         path = cache.get(hash)
-        cache.state()
 
         if path == "":
             return render_template("get.html",
