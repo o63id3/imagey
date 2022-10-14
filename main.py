@@ -73,8 +73,6 @@ class Cache:
 
     def put(self, key: str, value: str) -> None:
         if key not in self.cache:
-            print("hi")
-
             # If image exists
             if os.path.exists(value):
                 # Get image size in Bytes
@@ -349,6 +347,8 @@ def statistics():
     cursor.execute(sql)
 
     if cursor.fetchone()[0] > 0:
+        print("hi")
+
         # Get hit and miss rate
         sql = "SELECT SUM(hit), SUM(miss) from statistics where created_at >= date_sub(now(), interval 10 minute)"
         cursor.execute(sql)
