@@ -30,6 +30,26 @@ class Cache:
         self.replacment_policy = 0
         self.number_of_items = 0
 
+        # Connect to database
+        conn = connection()
+
+        cursor = conn.cursor()
+        sql = f"SELECT count(*) FROM `cache`"
+        cursor.execute(sql)
+
+        if cursor.fetchone()[0] != 0:
+            sql = f"SELECT size, replace_policy FROM `cache` where created_at = (SELECT MAX(created_at) FROM cache)"
+            cursor.execute(sql)
+
+            row = cursor.fetchone()
+
+            self.capacity = row[0] * 1024 * 1024
+            self.size = row[0] * 1024 * 1024
+            if row[1] == "LRU":
+                self.replacment_policy = 0
+            else:
+                self.replacment_policy = 1
+
         # Push statistics every 5 sec
         threading.Timer(5.0, self.storeStatistics).start()
 
@@ -50,14 +70,17 @@ class Cache:
             sql = f"SELECT count(*) FROM `images` WHERE hash='{key}'"
             cursor.execute(sql)
 
-            if cursor.fetchall()[0][0] == 0:
+            if cursor.fetchone()[0] == 0:
                 # If hash does not exist return empty string
                 return ""
             else:
                 sql = f"select hash, image from images where hash='{key}'"
                 cursor.execute(sql)
-                hash = cursor.fetchall()[0][0]
-                path = cursor.fetchall()[0][1]
+
+                row = cursor.fetchone()
+
+                hash = row[0]
+                path = f"/static/uploaded images/{row[1]}"
 
                 self.put(hash, path)
 
@@ -137,6 +160,10 @@ class Cache:
     def getReplacePolicy(self, ) -> int:
         return self.replacment_policy
 
+    def scheduler(self, ):
+        # Push statistics every 5 sec
+        threading.Timer(5.0, self.storeStatistics).start()
+
     def storeStatistics(self, ) -> None:
         if self.hit_count > 0 or self.miss_count > 0 or self.number_of_items != len(
                 self.cache):
@@ -147,14 +174,32 @@ class Cache:
             sql = f"INSERT INTO `statistics`(`hit`, `miss`, `number_of_items`, `free_space`) VALUES ('{self.hit_count}','{self.miss_count}','{len(self.cache)}','{self.getFreeSpace}')"
             cursor.execute(sql)
 
+            # Commit changes
+            conn.commit()
+
+            # Close connection
+            conn.close()
+
             # Clear old values
             self.hit_count = 0
             self.miss_count = 0
             self.number_of_items = len(self.cache)
 
+        self.scheduler()
+
     def clear(slef, ):
         slef.cache.clear()
         slef.capacity = slef.size
+
+    def state(self, ):
+        print(f"Number of items: {self.getNumberOfItems()}")
+        print(f"Size: {self.size}")
+        print(f"Capacity: {self.capacity}")
+        print(f"Hit: {self.hit_count}")
+        print(f"Miss: {self.miss_count}")
+        print(
+            "============================================================================================================================"
+        )
 
 
 # Cache
@@ -220,37 +265,23 @@ def show():
         return render_template("get.html")
 
     if request.method == 'POST':
-        # Connect to database
-        conn = connection()
-
         # Get post request parameters
         hash = str(request.form["hash"])
 
-        # Create new cursor
-        cursor = conn.cursor()
+        # Get the path from the cache
+        path = cache.get(hash)
 
-        # Check if hash exists
-        sql = f"SELECT count(*) FROM `images` WHERE hash='{hash}'"
-        cursor.execute(sql)
+        print(path)
 
-        if cursor.fetchone()[0] == 0:
+        cache.state()
+        if path == "":
+            print("hi")
             return render_template("get.html",
                                    hash=hash,
                                    message="Hash not found!")
         else:
-            # If hash exists redirct to same page with the image
-            sql = f"select image from images where hash='{hash}'"
-            cursor.execute(sql)
-            image = f"/static/uploaded images/{cursor.fetchone()[0]}"
-
-            # Commit changes
-            conn.commit()
-
-            # Close connection
-            conn.close()
-
             # Show get page
-            return render_template("get.html", hash=hash, image=image)
+            return render_template("get.html", hash=hash, image=path)
 
 
 @app.route('/keys', methods=['GET'])
