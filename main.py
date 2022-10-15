@@ -255,6 +255,7 @@ def store():
 
             #? Update the image with the new one
             sql = f"UPDATE images SET image='{file_name}' WHERE hash='{hash}'"
+            cache.invalidateKey(hash)
         cursor.execute(sql)
 
         # Commit changes
