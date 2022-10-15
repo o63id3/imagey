@@ -49,7 +49,7 @@ class Cache:
             # return self.cache[key]["path"]
 
             self.cache.move_to_end(key)
-            return self.cache[key]
+            return self.cache[key]["data"]
         else:
             self.miss_count = self.miss_count + 1
 
@@ -75,7 +75,7 @@ class Cache:
 
                 # #! Test
                 # return base64.b64encode(path.getvalue())
-                return self.cache[key]
+                return self.cache[key]["data"]
                 # #! EndTest
 
                 return path
@@ -112,7 +112,7 @@ class Cache:
                 # #Then encode the saved image file.
                 # encoded_img_data = base64.b64encode(data.getvalue())
 
-                self.cache[key] = data
+                self.cache[key] = {"data": data, "size": fileSize}
                 #! TestEnd
                 self.capacity = self.capacity - fileSize
 
@@ -125,7 +125,11 @@ class Cache:
 
                 # # Delete the item
                 # self.invalidateKey(key)
-                self.cache.popitem(last=False)
+                item = self.cache.popitem(last=False)
+                fileSize = item["size"]
+
+                # Free space
+                self.capacity = self.capacity + fileSize
             # Random
             else:
                 # Get random key
@@ -138,7 +142,7 @@ class Cache:
         if key in self.cache:
             # Get file size in Bytes
             # fileSize = os.path.getsize(self.cache[key]["path"])
-            fileSize = os.path.getsize(self.cache[key])
+            fileSize = self.cache[key]["size"]
 
             # Free space
             self.capacity = self.capacity + fileSize
