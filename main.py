@@ -5,6 +5,7 @@ import random
 import threading
 import time
 from asyncio.windows_events import NULL
+from collections import OrderedDict
 from dataclasses import replace
 
 import pymysql
@@ -26,7 +27,7 @@ def connection():
 class Cache:
 
     def __init__(self):
-        self.cache = dict()
+        self.cache = OrderedDict()
         self.capacity = (1000) * 1024 * 1024
         self.size = (1000) * 1024 * 1024
         self.hit_count = 0
@@ -44,8 +45,11 @@ class Cache:
         # If key exists in cache
         if key in self.cache:
             self.hit_count = self.hit_count + 1
-            self.cache[key]["LastTimeUsed"] = int(time.time() * 1000)
-            return self.cache[key]["path"]
+            # self.cache[key]["LastTimeUsed"] = int(time.time() * 1000)
+            # return self.cache[key]["path"]
+
+            self.cache.move_to_end(key)
+            return self.cache[key]
         else:
             self.miss_count = self.miss_count + 1
 
@@ -65,15 +69,13 @@ class Cache:
                 cursor.execute(sql)
 
                 row = cursor.fetchone()
-
                 hash = row[0]
                 path = f"static/uploaded images/{row[1]}"
-
                 self.put(hash, path)
 
                 # #! Test
                 # return base64.b64encode(path.getvalue())
-                return self.cache[key]["path"]
+                return self.cache[key]
                 # #! EndTest
 
                 return path
@@ -110,10 +112,7 @@ class Cache:
                 # #Then encode the saved image file.
                 # encoded_img_data = base64.b64encode(data.getvalue())
 
-                self.cache[key] = {
-                    "path": data,
-                    "LastTimeUsed": int(time.time() * 1000)
-                }
+                self.cache[key] = data
                 #! TestEnd
                 self.capacity = self.capacity - fileSize
 
@@ -121,11 +120,12 @@ class Cache:
         if len(self.cache) > 0:
             # LRU
             if self.replacment_policy == 0:
-                key = min(self.cache.keys(),
-                          key=(lambda k: self.cache[k]["LastTimeUsed"]))
+                # key = min(self.cache.keys(),
+                #           key=(lambda k: self.cache[k]["LastTimeUsed"]))
 
-                # Delete the item
-                self.invalidateKey(key)
+                # # Delete the item
+                # self.invalidateKey(key)
+                self.cache.popitem(last=False)
             # Random
             else:
                 # Get random key
@@ -137,7 +137,8 @@ class Cache:
     def invalidateKey(self, key: str) -> None:
         if key in self.cache:
             # Get file size in Bytes
-            fileSize = os.path.getsize(self.cache[key]["path"])
+            # fileSize = os.path.getsize(self.cache[key]["path"])
+            fileSize = os.path.getsize(self.cache[key])
 
             # Free space
             self.capacity = self.capacity + fileSize
