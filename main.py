@@ -126,7 +126,8 @@ class Cache:
                 # # Delete the item
                 # self.invalidateKey(key)
                 item = self.cache.popitem(last=False)
-                fileSize = item["size"]
+
+                fileSize = item[1]["size"]
 
                 # Free space
                 self.capacity = self.capacity + fileSize
