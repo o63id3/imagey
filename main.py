@@ -1,12 +1,15 @@
-from asyncio.windows_events import NULL
-from dataclasses import replace
+import base64
+import io
 import os
 import random
 import threading
 import time
+from asyncio.windows_events import NULL
+from dataclasses import replace
 
 import pymysql
 from flask import Flask, redirect, render_template, request, url_for
+from PIL import Image
 
 app = Flask(__name__)
 
@@ -35,7 +38,7 @@ class Cache:
         self.refreshConfiguration()
         threading.Timer(5.0, self.storeStatistics).start()
 
-    def get(self, key: str) -> str:
+    def get(self, key: str):
         self.number_of_requests_served = self.number_of_requests_served + 1
 
         # If key exists in cache
@@ -56,7 +59,7 @@ class Cache:
 
             if cursor.fetchone()[0] == 0:
                 # If hash does not exist return empty string
-                return ""
+                return None
             else:
                 sql = f"select hash, image from images where hash='{key}'"
                 cursor.execute(sql)
@@ -67,6 +70,11 @@ class Cache:
                 path = f"static/uploaded images/{row[1]}"
 
                 self.put(hash, path)
+
+                # #! Test
+                # return base64.b64encode(path.getvalue())
+                return self.cache[key]["path"]
+                # #! EndTest
 
                 return path
 
@@ -84,10 +92,29 @@ class Cache:
                 while self.capacity - fileSize < 0:
                     self.replace()
 
+                # self.cache[key] = {
+                #     "path": value,
+                #     "LastTimeUsed": int(time.time() * 1000)
+                # }
+
+                #! This is test
+                # Read image
+                im = Image.open(value)
+
+                # Get the in-memory info using below code line.
+                data = io.BytesIO()
+
+                #First save image as in-memory.
+                im.save(data, "JPEG")
+
+                # #Then encode the saved image file.
+                # encoded_img_data = base64.b64encode(data.getvalue())
+
                 self.cache[key] = {
-                    "path": value,
+                    "path": data,
                     "LastTimeUsed": int(time.time() * 1000)
                 }
+                #! TestEnd
                 self.capacity = self.capacity - fileSize
 
     def replace(self, ) -> None:
@@ -281,13 +308,16 @@ def show():
         # Get the path from the cache
         path = cache.get(hash)
 
-        if path == "":
+        if path == None:
             return render_template("get.html",
                                    hash=hash,
                                    message="Hash not found!")
         else:
+            encoded_img_data = base64.b64encode(path.getvalue())
             # Show get page
-            return render_template("get.html", hash=hash, image=path)
+            return render_template("get.html",
+                                   hash=hash,
+                                   image=encoded_img_data.decode('utf-8'))
 
 
 @app.route('/keys', methods=['GET'])
