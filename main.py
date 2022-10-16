@@ -256,7 +256,7 @@ class Cache:
                 self.replacment_policy = 1
 
 
-# Cache
+# Cache 1
 cache = Cache()
 
 
