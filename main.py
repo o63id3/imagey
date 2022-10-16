@@ -3,10 +3,8 @@ import io
 import os
 import random
 import threading
-import time
 from asyncio.windows_events import NULL
 from collections import OrderedDict
-from dataclasses import replace
 
 import pymysql
 from flask import Flask, redirect, render_template, request, url_for
