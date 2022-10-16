@@ -325,14 +325,14 @@ def show():
         hash = str(request.form["hash"])
 
         # Get the path from the cache
-        path = cache.get(hash)
+        image = cache.get(hash)
 
-        if path == None:
+        if image == None:
             return render_template("get.html",
                                    hash=hash,
                                    message="Hash not found!")
         else:
-            encoded_img_data = base64.b64encode(path.getvalue())
+            encoded_img_data = base64.b64encode(image.getvalue())
             # Show get page
             return render_template("get.html",
                                    hash=hash,
@@ -397,8 +397,6 @@ def control():
         # Refresh
         cache.refreshConfiguration()
 
-        cache.state()
-
         return redirect(url_for("statistics"))
 
 
@@ -435,7 +433,8 @@ def statistics():
             statistics["hit_rate"] = round((row[0] / (row[0] + row[1])) * 100,
                                            2)
             # ? Get miss rate
-            statistics["miss_rate"] = round(100 - statistics["hit_rate"], 2)
+            statistics["miss_rate"] = "{0:.2f}".format(
+                100 - statistics["hit_rate"])
     else:
         statistics["hit_rate"] = "?"
         statistics["miss_rate"] = "?"
