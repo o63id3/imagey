@@ -45,9 +45,6 @@ class Cache:
         # If key exists in cache
         if key in self.cache:
             self.hit_count = self.hit_count + 1
-            # self.cache[key]["LastTimeUsed"] = int(time.time() * 1000)
-            # return self.cache[key]["path"]
-
             self.cache.move_to_end(key)
             return self.cache[key]["data"]
         else:
@@ -62,7 +59,7 @@ class Cache:
             cursor.execute(sql)
 
             if cursor.fetchone()[0] == 0:
-                # If hash does not exist return empty string
+                # If hash does not exist return None
                 return None
             else:
                 sql = f"select hash, image from images where hash='{key}'"
@@ -71,37 +68,60 @@ class Cache:
                 row = cursor.fetchone()
                 hash = row[0]
                 path = f"static/uploaded images/{row[1]}"
-                self.put(hash, path)
 
-                # #! Test
-                # return base64.b64encode(path.getvalue())
-                return self.cache[key]["data"]
-                # #! EndTest
+                if os.path.exists(path):
+                    fileSize = os.path.getsize(path)
 
-                return path
+                    im = Image.open(path)
 
-    def put(self, key: str, value: str) -> None:
+                    # Get the in-memory info using below code line.
+                    data = io.BytesIO()
+
+                    #First save image as in-memory.
+                    im.save(data, "JPEG")
+
+                    value = {"data": data, "size": fileSize}
+
+                    self.put(hash, value)
+
+                    return value["data"]
+                else:
+                    return None
+
+    def put(self, key: str, value) -> None:
         if key not in self.cache:
-            # If image exists
-            if os.path.exists(value):
-                # Get image size in Bytes
-                fileSize = os.path.getsize(value)
+            # Get image size in Bytes
+            fileSize = value["size"]
 
-                if fileSize > self.size:
-                    return
+            if fileSize > self.size:
+                return
 
-                # If cache has no free space replace
-                while self.capacity - fileSize < 0:
-                    self.replace()
+            # If cache has no free space replace
+            while self.capacity - fileSize < 0:
+                self.replace()
 
-                # self.cache[key] = {
-                #     "path": value,
-                #     "LastTimeUsed": int(time.time() * 1000)
-                # }
+            self.cache[key] = value
+            #! TestEnd
+            self.capacity = self.capacity - fileSize
 
-                #! This is test
-                # Read image
-                im = Image.open(value)
+    def update(self, key: str) -> None:
+        if key in self.cache:
+            # Connect to database
+            conn = connection()
+
+            # Check if hash exists
+            cursor = conn.cursor()
+
+            sql = f"select hash, image from images where hash='{key}'"
+            cursor.execute(sql)
+
+            row = cursor.fetchone()
+            path = f"static/uploaded images/{row[1]}"
+
+            if os.path.exists(path):
+                fileSize = os.path.getsize(path)
+
+                im = Image.open(path)
 
                 # Get the in-memory info using below code line.
                 data = io.BytesIO()
@@ -109,12 +129,9 @@ class Cache:
                 #First save image as in-memory.
                 im.save(data, "JPEG")
 
-                # #Then encode the saved image file.
-                # encoded_img_data = base64.b64encode(data.getvalue())
+                value = {"data": data, "size": fileSize}
 
-                self.cache[key] = {"data": data, "size": fileSize}
-                #! TestEnd
-                self.capacity = self.capacity - fileSize
+                self.cache[key] = value
 
     def replace(self, ) -> None:
         if len(self.cache) > 0:
@@ -214,10 +231,8 @@ class Cache:
 
     def state(self, ):
         print(f"Number of items: {self.getNumberOfItems()}")
-        print(f"Size: {self.size}")
-        print(f"Capacity: {self.capacity}")
-        print(f"Hit: {self.hit_count}")
-        print(f"Miss: {self.miss_count}")
+        print(f"Size: {self.size / 1024 / 1024}")
+        print(f"Capacity: {self.capacity / 1024 / 1024}")
         print(
             "============================================================================================================================"
         )
@@ -236,8 +251,11 @@ class Cache:
 
             row = cursor.fetchone()
 
-            self.capacity = row[0] * 1024 * 1024
-            self.size = row[0] * 1024 * 1024
+            # self.capacity = row[0] * 1024 * 1024
+            # self.size = row[0] * 1024 * 1024
+
+            self.setSize(row[0])
+
             if row[1] == "LRU":
                 self.replacment_policy = 0
             else:
@@ -288,7 +306,7 @@ def store():
 
             #? Update the image with the new one
             sql = f"UPDATE images SET image='{file_name}' WHERE hash='{hash}'"
-            cache.invalidateKey(hash)
+            cache.update(hash)
         cursor.execute(sql)
 
         # Commit changes
@@ -357,6 +375,7 @@ def control():
         return render_template("control.html")
 
     if request.method == 'POST':
+        cache.state()
         # Get post request parameters
         cache_size = int(request.form["cache-size"])
         if int(request.form["replace-policy"]) == 0:
@@ -382,6 +401,8 @@ def control():
 
         # Refresh
         cache.refreshConfiguration()
+
+        cache.state()
 
         return redirect(url_for("statistics"))
 
@@ -431,7 +452,7 @@ def statistics():
     statistics["total_size"] = cache.getSize()
 
     #? Get Free Space in cache
-    statistics["free_space"] = cache.getFreeSpace()
+    statistics["free_space"] = "{0:.2f}".format(cache.getFreeSpace())
 
     #? Get replace policy
     if cache.getReplacePolicy() == 0:
@@ -443,7 +464,12 @@ def statistics():
     sql = "SELECT sum(number_of_requests_served) from statistics where created_at >= date_sub(now(), interval 10 minute)"
     cursor.execute(sql)
 
-    statistics["number_of_requests"] = cursor.fetchone()[0]
+    number_of_requests = cursor.fetchone()[0]
+
+    if number_of_requests == None:
+        statistics["number_of_requests"] = 0
+    else:
+        statistics["number_of_requests"] = cursor.fetchone()[0]
 
     # Close connection
     conn.close()
