@@ -3,7 +3,6 @@ import io
 import os
 import random
 import threading
-from asyncio.windows_events import NULL
 from collections import OrderedDict
 
 import pymysql
