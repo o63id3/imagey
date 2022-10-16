@@ -27,7 +27,7 @@ SET time_zone = "+00:00";
 -- Table structure for table `cache`
 --
 
-CREATE TABLE `cache` (
+CREATE OR REPLACE TABLE `cache` (
   `id` int(11) NOT NULL,
   `size` int(11) NOT NULL,
   `replace_policy` varchar(100) NOT NULL,
@@ -40,7 +40,7 @@ CREATE TABLE `cache` (
 -- Table structure for table `images`
 --
 
-CREATE TABLE `images` (
+CREATE OR REPLACE TABLE `images` (
   `hash` varchar(255) NOT NULL,
   `image` varchar(255) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
@@ -53,7 +53,7 @@ CREATE TABLE `images` (
 -- Table structure for table `replace_policies`
 --
 
-CREATE TABLE `replace_policies` (
+CREATE OR REPLACE TABLE `replace_policies` (
   `replace_policy` varchar(100) NOT NULL,
   `description` text NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -72,7 +72,7 @@ INSERT INTO `replace_policies` (`replace_policy`, `description`) VALUES
 -- Table structure for table `statistics`
 --
 
-CREATE TABLE `statistics` (
+CREATE OR REPLACE TABLE `statistics` (
   `id` int(11) NOT NULL,
   `hit` int(11) NOT NULL,
   `miss` int(11) NOT NULL,
