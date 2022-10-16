@@ -249,9 +249,6 @@ class Cache:
 
             row = cursor.fetchone()
 
-            # self.capacity = row[0] * 1024 * 1024
-            # self.size = row[0] * 1024 * 1024
-
             self.setSize(row[0])
 
             if row[1] == "LRU":
