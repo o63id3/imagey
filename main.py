@@ -75,7 +75,7 @@ class Cache:
                     # Get the in-memory info using below code line.
                     data = io.BytesIO()
 
-                    #First save image as in-memory.
+                    # First save image as in-memory.
                     im.save(data, "JPEG")
 
                     value = {"data": data, "size": fileSize}
@@ -124,7 +124,7 @@ class Cache:
                 # Get the in-memory info using below code line.
                 data = io.BytesIO()
 
-                #First save image as in-memory.
+                # First save image as in-memory.
                 im.save(data, "JPEG")
 
                 value = {"data": data, "size": fileSize}
@@ -183,7 +183,7 @@ class Cache:
     def getSize(self, ) -> int:
         return int(self.size) / 1024 / 1024
 
-    def getFullSpace(self, ) -> int:
+    def getUsedSpace(self, ) -> int:
         return (self.size - self.capacity) / 1024 / 1024
 
     def getFreeSpace(self, ) -> int:
@@ -206,7 +206,7 @@ class Cache:
             conn = connection()
 
             cursor = conn.cursor()
-            sql = f"INSERT INTO `statistics`(`hit`, `miss`, `number_of_items`, `total_size`, `number_of_requests_served`) VALUES ('{self.hit_count}','{self.miss_count}','{len(self.cache)}','{self.getFullSpace()}','{self.number_of_requests_served}')"
+            sql = f"INSERT INTO `statistics`(`hit`, `miss`, `number_of_items`, `total_size`, `number_of_requests_served`) VALUES ('{self.hit_count}','{self.miss_count}','{len(self.cache)}','{self.getUsedSpace()}','{self.number_of_requests_served}')"
             cursor.execute(sql)
 
             # Commit changes
@@ -302,7 +302,7 @@ def store():
             old_image = cursor.fetchone()[0]
             os.remove(f"static/uploaded images/{old_image}")
 
-            #? Update the image with the new one
+            # ? Update the image with the new one
             sql = f"UPDATE images SET image='{file_name}' WHERE hash='{hash}'"
             cache.update(hash)
         cursor.execute(sql)
@@ -434,31 +434,31 @@ def statistics():
             statistics["hit_rate"] = "?"
             statistics["miss_rate"] = "?"
         else:
-            #? Get hit rate
+            # ? Get hit rate
             statistics["hit_rate"] = round((row[0] / (row[0] + row[1])) * 100,
                                            2)
-            #? Get miss rate
+            # ? Get miss rate
             statistics["miss_rate"] = round(100 - statistics["hit_rate"], 2)
     else:
         statistics["hit_rate"] = "?"
         statistics["miss_rate"] = "?"
 
-    #? Get number of items
+    # ? Get number of items
     statistics["number_of_items"] = cache.getNumberOfItems()
 
-    #? Get total size of the cache
+    # ? Get total size of the cache
     statistics["total_size"] = cache.getSize()
 
-    #? Get Free Space in cache
+    # ? Get Free Space in cache
     statistics["free_space"] = "{0:.2f}".format(cache.getFreeSpace())
 
-    #? Get replace policy
+    # ? Get replace policy
     if cache.getReplacePolicy() == 0:
         statistics["replace-policy"] = "LRU"
     else:
         statistics["replace-policy"] = "Random"
 
-    #? Get number of requests
+    # ? Get number of requests
     sql = "SELECT sum(number_of_requests_served) from statistics where created_at >= date_sub(now(), interval 10 minute)"
     cursor.execute(sql)
 
