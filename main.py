@@ -464,7 +464,7 @@ def statistics():
     if number_of_requests == None:
         statistics["number_of_requests"] = 0
     else:
-        statistics["number_of_requests"] = cursor.fetchone()[0]
+        statistics["number_of_requests"] = number_of_requests
 
     # Close connection
     conn.close()
