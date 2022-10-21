@@ -39,7 +39,7 @@ class Cache:
         self.number_of_requests_served = 0
 
         self.refreshConfiguration()
-        # self.scheduler()
+        self.scheduler()
 
     # Get image from cache
     def get(self, key: str):
