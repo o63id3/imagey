@@ -503,12 +503,6 @@ def statistics(cleared=False, updated=False):
 
 @app.route('/cache/keys', methods=['GET'])
 def cacheKeys():
-    c = cache.getCache()
-    for key in c.keys():
-        print(c[key]['hash'])
-        print(c[key]['size'])
-        print(c[key]['lastTimeUsed'])
-        print(c[key]['name'])
     return render_template("cachekeys.html", status=200, keys=cache.getCache())
 
 
