@@ -271,9 +271,11 @@ def store():
         sql = f"SELECT image FROM images WHERE hash='{hash}'"
         numberOfHashes = cursor.execute(sql)
 
+        fileSize = os.path.getsize(f"static/uploaded images/{file_name}")
+
         if numberOfHashes == 0:
             # If hash does not exist insert to database
-            sql = f"INSERT INTO images (hash, image) VALUES ('{hash}', '{file_name}')"
+            sql = f"INSERT INTO images (hash, image, size) VALUES ('{hash}', '{file_name}', '{fileSize}')"
             cursor.execute(sql)
         else:
             # If hash do exist delete old image and update with new one
@@ -281,7 +283,7 @@ def store():
             os.remove(f"static/uploaded images/{old_image}")
 
             # ? Update the image with the new one
-            sql = f"UPDATE images SET image='{file_name}' WHERE hash='{hash}'"
+            sql = f"UPDATE images SET image='{file_name}', size='{fileSize}' WHERE hash='{hash}'"
             cursor.execute(sql)
             cache.put(hash, f"static/uploaded images/{file_name}")
 
@@ -324,7 +326,7 @@ def keys():
     cursor = conn.cursor()
 
     # Get all keys
-    numberOfKeys = cursor.execute("SELECT hash FROM images")
+    numberOfKeys = cursor.execute("SELECT hash, size FROM images")
 
     # Close connection
     cursor.close()
