@@ -3,6 +3,7 @@ import datetime
 import io
 import os
 import random
+from sqlite3 import Cursor
 import threading
 from collections import OrderedDict
 
@@ -14,25 +15,23 @@ app = Flask(__name__)
 
 
 def connection():
-    # Connect to database
     conn = pymysql.connect(host='localhost',
                            user='root',
                            password='',
-                           database='imagey')
+                           database='imagey'
+                           autocommit=True)
     return conn
 
 
 class Cache:
 
+    # Cache init
     def __init__(self):
         self.cache = OrderedDict()
         self.keys = []
 
-        self.size = (1000) * 1024 * 1024
-
-        # self.capacity = (1000) * 1024 * 1024
+        self.size = (1) * 1024 * 1024
         self.used = 0
-
         self.hit_count = 0
         self.miss_count = 0
         self.replacment_policy = "LRU"
@@ -42,6 +41,7 @@ class Cache:
         self.refreshConfiguration()
         self.scheduler()
 
+    # Get image from cache
     def get(self, key: str):
         self.number_of_requests_served = self.number_of_requests_served + 1
 
@@ -58,25 +58,26 @@ class Cache:
             # Connect to database
             conn = connection()
 
-            # Check if hash exists
             cursor = conn.cursor()
             sql = f"SELECT image FROM images WHERE hash='{key}'"
             numberOfHashes = cursor.execute(sql)
 
-            if numberOfHashes == 0:
-                # If hash does not exist return None
-                return None
-            else:
+            if numberOfHashes != 0:
                 row = cursor.fetchone()
                 path = f"static/uploaded images/{row[0]}"
-
                 image = self.put(key, path)
 
-                if image != None:
-                    return image["data"]
-                else:
-                    return None
+                cursor.close()
+                conn.close()
 
+                return image["data"]
+
+            cursor.close()
+            conn.close()
+
+            return None
+
+    # Put image into cache
     def put(self, key: str, path: str):
         if os.path.exists(path):
             fileSize = os.path.getsize(path)
@@ -111,6 +112,7 @@ class Cache:
         else:
             return None
 
+    # Replace image from cache
     def replace(self, ) -> None:
         if len(self.cache) > 0:
             # LRU
@@ -127,6 +129,7 @@ class Cache:
                 # Delete the item
                 self.invalidateKey(key)
 
+    # Delete image from cache
     def invalidateKey(self, key: str) -> None:
         if key in self.cache:
             # Get file size in Bytes
@@ -141,9 +144,58 @@ class Cache:
             # Delete key
             self.keys.remove(key)
 
-    def setReplacment(self, policy: str) -> None:
-        self.replacment_policy = policy
+    # Refresh cache configuration
+    def refreshConfiguration(self, ):
+        # Connect to database
+        conn = connection()
 
+        cursor = conn.cursor()
+
+        count = cursor.execute(
+            "SELECT size, replace_policy FROM `cache` WHERE created_at = (SELECT MAX(created_at) FROM cache)")
+
+        if count != 0:
+            row = cursor.fetchone()
+            self.setSize(row[0])
+            self.replacment_policy = row[1]
+
+        cursor.close()
+        conn.close()
+
+    # Scheduler to store statistics every 5 sec
+    def scheduler(self, ):
+        # Push statistics every 5 sec
+        threading.Timer(5.0, self.storeStatistics).start()
+
+    # Store statistics to database
+    def storeStatistics(self, ) -> None:
+        if self.hit_count > 0 or self.miss_count > 0 or self.number_of_items != len(
+                self.cache):
+            # Connect to database
+            conn = connection()
+
+            cursor = conn.cursor()
+            sql = f"INSERT INTO `statistics`(`hit`, `miss`, `number_of_items`, `total_size`, `number_of_requests_served`) VALUES ('{self.hit_count}','{self.miss_count}','{len(self.cache)}','{self.getUsedSpace()}','{self.number_of_requests_served}')"
+            cursor.execute(sql)
+
+            # Close connection
+            cursor.close()
+            conn.close()
+
+            # Clear old values
+            self.hit_count = 0
+            self.miss_count = 0
+            self.number_of_items = len(self.cache)
+            self.number_of_requests_served = 0
+
+        self.scheduler()
+
+    # Clear cache
+    def clear(slef, ):
+        slef.cache.clear()
+        slef.used = 0
+
+    # Get cache images without image itself
     def getCache(self, ):
         cache = {}
         for key in self.cache.keys():
@@ -155,81 +207,35 @@ class Cache:
             }
         return cache
 
+    # Sets cache replacment policy
+    def setReplacment(self, policy: str) -> None:
+        self.replacment_policy = policy
+
+    # Returns cache replacment policy
+    def getReplacePolicy(self, ) -> str:
+        return self.replacment_policy
+
+    # Sets cache size
     def setSize(self, size: int) -> None:
         self.size = size * 1024 * 1024
         while self.used > self.size:
             self.replace()
 
+    # Returns cache size
     def getSize(self, ) -> int:
         return int(self.size) / 1024 / 1024
 
+    # Returns cache used space in MB
     def getUsedSpace(self, ) -> int:
         return self.used / 1024 / 1024
 
+    # Returns cache free space in MB
     def getFreeSpace(self, ) -> int:
         return (self.size - self.used) / 1024 / 1024
 
+    # Returns number of images inside cache
     def getNumberOfItems(self, ) -> int:
         return len(self.cache)
-
-    def getReplacePolicy(self, ) -> int:
-        return self.replacment_policy
-
-    def scheduler(self, ):
-        # Push statistics every 5 sec
-        threading.Timer(5.0, self.storeStatistics).start()
-
-    def storeStatistics(self, ) -> None:
-        if self.hit_count > 0 or self.miss_count > 0 or self.number_of_items != len(
-                self.cache):
-            # Connect to database
-            conn = connection()
-
-            cursor = conn.cursor()
-            sql = f"INSERT INTO `statistics`(`hit`, `miss`, `number_of_items`, `total_size`, `number_of_requests_served`) VALUES ('{self.hit_count}','{self.miss_count}','{len(self.cache)}','{self.getUsedSpace()}','{self.number_of_requests_served}')"
-            cursor.execute(sql)
-
-            # Commit changes
-            conn.commit()
-
-            # Close connection
-            conn.close()
-
-            # Clear old values
-            self.hit_count = 0
-            self.miss_count = 0
-            self.number_of_items = len(self.cache)
-            self.number_of_requests_served = 0
-
-        self.scheduler()
-
-    def clear(slef, ):
-        slef.cache.clear()
-        # slef.capacity = slef.size
-        slef.used = 0
-
-    def state(self, ):
-        print(f"Number of items: {self.getNumberOfItems()}")
-        print(f"Size: {self.size / 1024 / 1024}")
-        # print(f"Capacity: {self.capacity / 1024 / 1024}")
-        print(f"Used: {self.used / 1024 / 1024}")
-        print(
-            "============================================================================================================================"
-        )
-
-    def refreshConfiguration(self, ):
-        # Connect to database
-        conn = connection()
-
-        cursor = conn.cursor()
-
-        count = cursor.execute(
-            f"SELECT size, replace_policy FROM `cache` WHERE created_at = (SELECT MAX(created_at) FROM cache)")
-
-        if count != 0:
-            row = cursor.fetchone()
-            self.setSize(row[0])
-            self.replacment_policy = row[1]
 
 
 # Cache
@@ -278,10 +284,8 @@ def store():
             cursor.execute(sql)
             cache.put(hash, f"static/uploaded images/{file_name}")
 
-        # Commit changes
-        conn.commit()
-
         # Close connection
+        cursor.close()
         conn.close()
 
         return render_template("add.html", status=201, added=True)
@@ -328,6 +332,7 @@ def keys():
     numberOfKeys = cursor.execute("SELECT hash FROM images")
 
     # Close connection
+    cursor.close()
     conn.close()
 
     if numberOfKeys > 0:
@@ -361,10 +366,8 @@ def control():
             f"INSERT INTO `cache`(`size`, `replace_policy`) VALUES ('{cache_size}','{replacement}')"
         )
 
-        # Commit changes
-        conn.commit()
-
         # Close connection
+        cursor.close()
         conn.close()
 
         # Refresh
@@ -444,13 +447,13 @@ def statistics():
     times2 = []
     sizes = []
 
-    sql = "set @hits := 0;"
+    sql = "SET @hits := 0;"
     cursor.execute(sql)
-    sql = "set @misses := 0;"
+    sql = "SET @misses := 0;"
     cursor.execute(sql)
-    sql = "set @requests := 0;"
+    sql = "SET @requests := 0;"
     cursor.execute(sql)
-    sql = "select (@hits := @hits + hit) as hits, (@misses := @misses + miss) as misses, (@requests := @requests + number_of_requests_served), UNIX_TIMESTAMP(created_at) as requests from statistics order by created_at;"
+    sql = "SELECT (@hits := @hits + hit) AS hits, (@misses := @misses + miss) AS misses, (@requests := @requests + number_of_requests_served), UNIX_TIMESTAMP(created_at) AS requests FROM statistics ORDER BY created_at;"
     count = cursor.execute(sql)
 
     if count > 0:
@@ -492,6 +495,7 @@ def statistics():
             requests.append(requests[len(requests) - 1])
 
     # Close connection
+    cursor.close()
     conn.close()
 
     # Show statistics page
