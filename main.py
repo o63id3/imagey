@@ -467,6 +467,16 @@ def statistics():
 
         min_time = min(min(times1), min(times2))
 
+        if min_time == min(times1):
+            times2.insert(0, min_time)
+            sizes.insert(0, sizes[0])
+        else:
+            times1.insert(0, min_time)
+            hits.insert(0, hits[0])
+            misses.insert(0, misses[0])
+            requests.insert(0, requests[0])
+
+
         for i in range(0, len(times1)):
             times1[i] -= min_time
             times1[i] /= 4000
