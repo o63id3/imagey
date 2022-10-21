@@ -384,7 +384,7 @@ def clear():
 
 
 @app.route('/statistics', methods=['GET'])
-def statistics(cleared=False, updated=False):
+def statistics():
     current_statistics = {}
     statistics_past_10_min = {}
     statistics_all_times = {}
