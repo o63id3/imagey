@@ -69,4 +69,16 @@
         >
     </div>
 </div>
+
+<script>
+    window.addEventListener("load", (event) => {
+        const myElement = document.getElementById("alert-added-success");
+
+        {% if added %}
+            myElement.classList.toggle("show");
+            myElement.style.display = "block";
+        {% endif %}
+    });
+</script>
+
 {% endblock %}

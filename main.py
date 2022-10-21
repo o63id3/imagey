@@ -1,4 +1,5 @@
 import base64
+import datetime
 import io
 import os
 import random
@@ -25,16 +26,21 @@ class Cache:
 
     def __init__(self):
         self.cache = OrderedDict()
-        self.capacity = (1000) * 1024 * 1024
+        self.keys = []
+
         self.size = (1000) * 1024 * 1024
+
+        # self.capacity = (1000) * 1024 * 1024
+        self.used = 0
+
         self.hit_count = 0
         self.miss_count = 0
-        self.replacment_policy = 0
+        self.replacment_policy = "LRU"
         self.number_of_items = 0
         self.number_of_requests_served = 0
 
         self.refreshConfiguration()
-        threading.Timer(5.0, self.storeStatistics).start()
+        self.scheduler()
 
     def get(self, key: str):
         self.number_of_requests_served = self.number_of_requests_served + 1
@@ -43,6 +49,8 @@ class Cache:
         if key in self.cache:
             self.hit_count = self.hit_count + 1
             self.cache.move_to_end(key)
+            self.cache[key]["LastTimeUsed"] = datetime.datetime.now().strftime(
+                "%Y-%m-%d %H:%M:%S")
             return self.cache[key]["data"]
         else:
             self.miss_count = self.miss_count + 1
@@ -52,103 +60,69 @@ class Cache:
 
             # Check if hash exists
             cursor = conn.cursor()
-            sql = f"SELECT count(*) FROM `images` WHERE hash='{key}'"
-            cursor.execute(sql)
+            sql = f"SELECT image FROM images WHERE hash='{key}'"
+            numberOfHashes = cursor.execute(sql)
 
-            if cursor.fetchone()[0] == 0:
+            if numberOfHashes == 0:
                 # If hash does not exist return None
                 return None
             else:
-                sql = f"select hash, image from images where hash='{key}'"
-                cursor.execute(sql)
-
                 row = cursor.fetchone()
-                hash = row[0]
-                path = f"static/uploaded images/{row[1]}"
+                path = f"static/uploaded images/{row[0]}"
 
-                if os.path.exists(path):
-                    fileSize = os.path.getsize(path)
+                image = self.put(key, path)
 
-                    im = Image.open(path)
-
-                    # Get the in-memory info using below code line.
-                    data = io.BytesIO()
-
-                    # First save image as in-memory.
-                    im.save(data, "JPEG")
-
-                    value = {"data": data, "size": fileSize}
-
-                    self.put(hash, value)
-
-                    return value["data"]
+                if image != None:
+                    return image["data"]
                 else:
                     return None
 
-    def put(self, key: str, value) -> None:
-        if key not in self.cache:
+    def put(self, key: str, path: str):
+        if os.path.exists(path):
+            fileSize = os.path.getsize(path)
+
+            im = Image.open(path)
+
+            data = io.BytesIO()
+            im.save(data, "JPEG")
+            value = {
+                "data": base64.b64encode(data.getvalue()).decode('utf-8'),
+                "size": fileSize,
+                "LastTimeUsed": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "ImageName": os.path.basename(path)
+            }
+
             # Get image size in Bytes
             fileSize = value["size"]
 
             if fileSize > self.size:
-                return
+                return value
 
-            # If cache has no free space replace
-            while self.capacity - fileSize < 0:
+            if key in self.cache:
+                self.invalidateKey(key)
+
+            while self.used + fileSize > self.size:
                 self.replace()
 
             self.cache[key] = value
-            #! TestEnd
-            self.capacity = self.capacity - fileSize
-
-    def update(self, key: str) -> None:
-        if key in self.cache:
-            # Connect to database
-            conn = connection()
-
-            # Check if hash exists
-            cursor = conn.cursor()
-
-            sql = f"select hash, image from images where hash='{key}'"
-            cursor.execute(sql)
-
-            row = cursor.fetchone()
-            path = f"static/uploaded images/{row[1]}"
-
-            if os.path.exists(path):
-                fileSize = os.path.getsize(path)
-
-                im = Image.open(path)
-
-                # Get the in-memory info using below code line.
-                data = io.BytesIO()
-
-                # First save image as in-memory.
-                im.save(data, "JPEG")
-
-                value = {"data": data, "size": fileSize}
-
-                self.cache[key] = value
+            self.used = self.used + fileSize
+            self.keys.append(key)
+            return value
+        else:
+            return None
 
     def replace(self, ) -> None:
         if len(self.cache) > 0:
             # LRU
-            if self.replacment_policy == 0:
-                # key = min(self.cache.keys(),
-                #           key=(lambda k: self.cache[k]["LastTimeUsed"]))
-
-                # # Delete the item
-                # self.invalidateKey(key)
+            if self.replacment_policy == "LRU":
                 item = self.cache.popitem(last=False)
-
                 fileSize = item[1]["size"]
 
-                # Free space
-                self.capacity = self.capacity + fileSize
+                self.used = self.used - fileSize
             # Random
             else:
                 # Get random key
-                key = random.choice(list(self.cache.keys()))
+                key = random.choice(self.keys)
 
                 # Delete the item
                 self.invalidateKey(key)
@@ -156,37 +130,44 @@ class Cache:
     def invalidateKey(self, key: str) -> None:
         if key in self.cache:
             # Get file size in Bytes
-            # fileSize = os.path.getsize(self.cache[key]["path"])
             fileSize = self.cache[key]["size"]
 
             # Free space
-            self.capacity = self.capacity + fileSize
+            self.used = self.used - fileSize
 
-            # Delete item from cache
+            # Delete item FROM cache
             self.cache.pop(key)
 
-    def setReplacment(self, policy: int) -> None:
-        if 0 <= policy <= 1:
-            self.replacment_policy = policy
+            # Delete key
+            self.keys.remove(key)
+
+    def setReplacment(self, policy: str) -> None:
+        self.replacment_policy = policy
+
+    def getCache(self, ):
+        cache = {}
+        for key in self.cache.keys():
+            cache[key] = {
+                'hash': key,
+                'name': self.cache[key]['ImageName'],
+                'size': "{0:.2f}".format(self.cache[key]['size'] / 1000 / 1000),
+                'lastTimeUsed': self.cache[key]['LastTimeUsed'],
+            }
+        return cache
 
     def setSize(self, size: int) -> None:
-        size = size * 1024 * 1024
-
-        self.capacity = self.capacity - self.size + size
-
-        self.size = size
-
-        while self.capacity < 0:
+        self.size = size * 1024 * 1024
+        while self.used > self.size:
             self.replace()
 
     def getSize(self, ) -> int:
         return int(self.size) / 1024 / 1024
 
     def getUsedSpace(self, ) -> int:
-        return (self.size - self.capacity) / 1024 / 1024
+        return self.used / 1024 / 1024
 
     def getFreeSpace(self, ) -> int:
-        return (self.size - (self.size - self.capacity)) / 1024 / 1024
+        return (self.size - self.used) / 1024 / 1024
 
     def getNumberOfItems(self, ) -> int:
         return len(self.cache)
@@ -224,12 +205,14 @@ class Cache:
 
     def clear(slef, ):
         slef.cache.clear()
-        slef.capacity = slef.size
+        # slef.capacity = slef.size
+        slef.used = 0
 
     def state(self, ):
         print(f"Number of items: {self.getNumberOfItems()}")
         print(f"Size: {self.size / 1024 / 1024}")
-        print(f"Capacity: {self.capacity / 1024 / 1024}")
+        # print(f"Capacity: {self.capacity / 1024 / 1024}")
+        print(f"Used: {self.used / 1024 / 1024}")
         print(
             "============================================================================================================================"
         )
@@ -239,37 +222,33 @@ class Cache:
         conn = connection()
 
         cursor = conn.cursor()
-        sql = f"SELECT count(*) FROM `cache`"
-        cursor.execute(sql)
 
-        if cursor.fetchone()[0] != 0:
-            sql = f"SELECT size, replace_policy FROM `cache` where created_at = (SELECT MAX(created_at) FROM cache)"
-            cursor.execute(sql)
+        count = cursor.execute(
+            f"SELECT size, replace_policy FROM `cache` WHERE created_at = (SELECT MAX(created_at) FROM cache)")
 
+        if count != 0:
             row = cursor.fetchone()
-
             self.setSize(row[0])
-
-            if row[1] == "LRU":
-                self.replacment_policy = 0
-            else:
-                self.replacment_policy = 1
+            self.replacment_policy = row[1]
 
 
 # Cache
 cache = Cache()
 
+# Connection
+conn = connection()
+
 
 @app.route('/', methods=['GET'])
 def home():
-    return render_template('index.html')
+    return render_template('index.html', status=200)
 
 
 @app.route('/add', methods=['GET', 'POST'])
 def store():
     if request.method == 'GET':
         # Show add page
-        return render_template("add.html")
+        return render_template("add.html", status=200)
 
     if request.method == 'POST':
         # Connect to database
@@ -285,29 +264,30 @@ def store():
 
         # Check if hash exists
         cursor = conn.cursor()
-        sql = f"SELECT count(*) FROM `images` WHERE hash='{hash}'"
-        cursor.execute(sql)
+        sql = f"SELECT image FROM images WHERE hash='{hash}'"
+        numberOfHashes = cursor.execute(sql)
 
-        if cursor.fetchone()[0] == 0:
+        if numberOfHashes == 0:
             # If hash does not exist insert to database
             sql = f"INSERT INTO images (hash, image) VALUES ('{hash}', '{file_name}')"
+            cursor.execute(sql)
         else:
             #! Delete the old image form disk
-            sql = f"select image from images where hash='{hash}'"
-            cursor.execute(sql)
             old_image = cursor.fetchone()[0]
             os.remove(f"static/uploaded images/{old_image}")
 
             # ? Update the image with the new one
             sql = f"UPDATE images SET image='{file_name}' WHERE hash='{hash}'"
-            cache.update(hash)
-        cursor.execute(sql)
+            cursor.execute(sql)
+            cache.put(hash, f"static/uploaded images/{file_name}")
 
         # Commit changes
         conn.commit()
 
         # Close connection
         conn.close()
+
+        return render_template("add.html", status=201, added=True)
 
         # Redirect to show page
         return redirect(url_for("show"))
@@ -317,25 +297,26 @@ def store():
 def show():
     if request.method == 'GET':
         # Show get page
-        return render_template("get.html")
+        return render_template("get.html", status=200)
 
     if request.method == 'POST':
         # Get post request parameters
         hash = str(request.form["hash"])
 
-        # Get the path from the cache
+        # Get the path FROM the cache
         image = cache.get(hash)
 
         if image == None:
             return render_template("get.html",
                                    hash=hash,
-                                   message="Hash not found!")
+                                   message="Hash not found!",
+                                   status=400)
         else:
-            encoded_img_data = base64.b64encode(image.getvalue())
             # Show get page
             return render_template("get.html",
                                    hash=hash,
-                                   image=encoded_img_data.decode('utf-8'))
+                                   image=image,
+                                   status=200)
 
 
 @app.route('/keys', methods=['GET'])
@@ -347,31 +328,28 @@ def keys():
     cursor = conn.cursor()
 
     # Get all keys
-    cursor.execute("SELECT hash FROM images")
-
-    keys = []
-    count = 1
-    for row in cursor.fetchall():
-        keys.append({"id": count, "hash": row[0]})
-        count = count + 1
+    numberOfKeys = cursor.execute("SELECT hash FROM images")
 
     # Close connection
     conn.close()
 
-    # Show keys page
-    return render_template("keys.html", keys=keys)
+    if numberOfKeys > 0:
+        # Show keys page
+        return render_template("keys.html", keys=cursor, status=200)
+    else:
+        return render_template("keys.html", status=200)
 
 
 @app.route('/control', methods=['GET', 'POST'])
 def control():
     if request.method == 'GET':
         # Show control page
-        return render_template("control.html")
+        return render_template("control.html", status=200, size=cache.getSize(), replace_policy=cache.getReplacePolicy())
 
     if request.method == 'POST':
         cache.state()
         # Get post request parameters
-        cache_size = int(request.form["cache-size"])
+        cache_size = (request.form["cache-size"])
         if int(request.form["replace-policy"]) == 0:
             replacement = "LRU"
         else:
@@ -396,79 +374,144 @@ def control():
         # Refresh
         cache.refreshConfiguration()
 
-        return redirect(url_for("statistics"))
+        return render_template("control.html", status=200, updated=True, size=cache.getSize(), replace_policy=cache.getReplacePolicy())
 
 
 @app.route('/clear', methods=['POST'])
 def clear():
     cache.clear()
-    return redirect(url_for("statistics"))
+    # return redirect(url_for("statistics", cleared=True))
+    return render_template("control.html", status=200, cleared=True, size=cache.getSize(), replace_policy=cache.getReplacePolicy())
 
 
 @app.route('/statistics', methods=['GET'])
-def statistics():
-    statistics = {}
+def statistics(cleared=False, updated=False):
+    current_statistics = {}
+    statistics_past_10_min = {}
+    statistics_all_times = {}
 
     # Connect to database
     conn = connection()
     cursor = conn.cursor()
 
-    # Check if their is any hit or miss count the past 10 min
-    sql = "SELECT count(*) from statistics where created_at >= date_sub(now(), interval 10 minute)"
+    # ? Current statistics
+    current_statistics["total_space"] = cache.getSize()
+    current_statistics["free_space"] = cache.getFreeSpace()
+    current_statistics["number_of_items"] = cache.getNumberOfItems()
+    current_statistics["replace_policy"] = cache.getReplacePolicy()
+
+    # ? Statistics past 10 min
+    sql = "SELECT NVL(SUM(hit), 0), NVL(SUM(miss), 0) FROM statistics WHERE created_at >= date_sub(now(), interval 10 minute)"
     cursor.execute(sql)
 
-    if cursor.fetchone()[0] > 0:
-        # Get hit and miss rate
-        sql = "SELECT SUM(hit), SUM(miss) from statistics where created_at >= date_sub(now(), interval 10 minute)"
+    row = cursor.fetchone()
+
+    if row[0] == 0 and row[1] == 0:
+        statistics_past_10_min["hit_rate"] = "?"
+        statistics_past_10_min["miss_rate"] = "?"
+    else:
+        statistics_past_10_min["hit_rate"] = round(
+            (row[0] / (row[0] + row[1])) * 100, 2)
+        statistics_past_10_min["miss_rate"] = "{0:.2f}".format(
+            100 - statistics_past_10_min["hit_rate"])
+
+    sql = "SELECT NVL(SUM(number_of_requests_served), 0) FROM statistics WHERE created_at >= date_sub(now(), interval 10 minute)"
+    cursor.execute(sql)
+    statistics_past_10_min["number_of_requests"] = cursor.fetchone()[0]
+
+    # ? Statistics all times
+    sql = "SELECT NVL(SUM(hit), 0), NVL(SUM(miss), 0) FROM statistics"
+    cursor.execute(sql)
+
+    row = cursor.fetchone()
+
+    if row[0] == 0 and row[1] == 0:
+        statistics_all_times["hit_rate"] = "?"
+        statistics_all_times["miss_rate"] = "?"
+    else:
+        statistics_all_times["hit_rate"] = round(
+            (row[0] / (row[0] + row[1])) * 100, 2)
+        statistics_all_times["miss_rate"] = "{0:.2f}".format(
+            100 - statistics_all_times["hit_rate"])
+
+    sql = "SELECT NVL(SUM(number_of_requests_served), 0) FROM statistics"
+    cursor.execute(sql)
+    statistics_all_times["number_of_requests"] = cursor.fetchone()[0]
+
+    # ? Plots
+    times1 = []
+
+    hits = []
+    misses = []
+    requests = []
+
+    times2 = []
+    sizes = []
+
+    sql = "set @hits := 0;"
+    cursor.execute(sql)
+    sql = "set @misses := 0;"
+    cursor.execute(sql)
+    sql = "set @requests := 0;"
+    cursor.execute(sql)
+    sql = "select (@hits := @hits + hit) as hits, (@misses := @misses + miss) as misses, (@requests := @requests + number_of_requests_served), UNIX_TIMESTAMP(created_at) as requests from statistics order by created_at;"
+    count = cursor.execute(sql)
+
+    if count > 0:
+        rows = cursor.fetchall()
+
+        for row in rows:
+            hits.append(int(row[0]))
+            misses.append(int(row[1]))
+            requests.append(int(row[2]))
+            times1.append(int(row[3]))
+
+        sql = "SELECT size, UNIX_TIMESTAMP(created_at) FROM cache ORDER BY created_at"
         cursor.execute(sql)
+        rows = cursor.fetchall()
 
-        row = cursor.fetchone()
+        for row in rows:
+            sizes.append(int(row[0]))
+            times2.append(row[1])
 
-        if row[0] == 0 and row[1] == 0:
-            statistics["hit_rate"] = "?"
-            statistics["miss_rate"] = "?"
+        min_time = min(min(times1), min(times2))
+
+        for i in range(0, len(times1)):
+            times1[i] -= min_time
+            times1[i] /= 4000
+
+        for i in range(0, len(times2)):
+            times2[i] -= min_time
+            times2[i] /= 4000
+
+        max_time = max(max(times1), max(times2))
+
+        if max_time == max(times1):
+            print("hi")
+            times2.append(max_time)
+            sizes.append(sizes[len(sizes) - 1])
         else:
-            # ? Get hit rate
-            statistics["hit_rate"] = round((row[0] / (row[0] + row[1])) * 100,
-                                           2)
-            # ? Get miss rate
-            statistics["miss_rate"] = "{0:.2f}".format(
-                100 - statistics["hit_rate"])
-    else:
-        statistics["hit_rate"] = "?"
-        statistics["miss_rate"] = "?"
-
-    # ? Get number of items
-    statistics["number_of_items"] = cache.getNumberOfItems()
-
-    # ? Get total size of the cache
-    statistics["total_size"] = cache.getSize()
-
-    # ? Get Free Space in cache
-    statistics["free_space"] = "{0:.2f}".format(cache.getFreeSpace())
-
-    # ? Get replace policy
-    if cache.getReplacePolicy() == 0:
-        statistics["replace-policy"] = "LRU"
-    else:
-        statistics["replace-policy"] = "Random"
-
-    # ? Get number of requests
-    sql = "SELECT sum(number_of_requests_served) from statistics where created_at >= date_sub(now(), interval 10 minute)"
-    cursor.execute(sql)
-
-    number_of_requests = cursor.fetchone()[0]
-
-    if number_of_requests == None:
-        statistics["number_of_requests"] = 0
-    else:
-        statistics["number_of_requests"] = number_of_requests
+            times1.append(max_time)
+            hits.append(hits[len(hits) - 1])
+            misses.append(misses[len(misses) - 1])
+            requests.append(requests[len(requests) - 1])
 
     # Close connection
     conn.close()
 
     # Show statistics page
-    return render_template("statistics.html", statistics=statistics)
+    return render_template("statistics.html", current_statistics=current_statistics, statistics_past_10_min=statistics_past_10_min, statistics_all_times=statistics_all_times, status=200, cleared=cleared, times1=times1, hits=hits, misses=misses, requests=requests, times2=times2, sizes=sizes)
+
+
+@app.route('/cache/keys', methods=['GET'])
+def cacheKeys():
+    c = cache.getCache()
+    for key in c.keys():
+        print(c[key]['hash'])
+        print(c[key]['size'])
+        print(c[key]['lastTimeUsed'])
+        print(c[key]['name'])
+    return render_template("cachekeys.html", status=200, keys=cache.getCache())
 
 
 app.run(debug=True)

@@ -22,61 +22,93 @@
         "
     >
         <p style="margin-bottom: 50px; font-size: 30px; font-weight: bold">
-            Cache statistics
+            Current cache statistics
         </p>
 
         <div class="input-group mb-3">
-            <span class="input-group-text">Hit rate</span>
-            <input type="text" class="form-control" value="{{
-            statistics["hit_rate"] }}" disabled readonly style="color: green;
-            font-weight: bold" />
-            <span class="input-group-text">%</span>
-        </div>
-
-        <div class="input-group mb-3">
-            <span class="input-group-text">Miss rate</span>
-            <input type="text" class="form-control" value="{{
-            statistics["miss_rate"] }}" disabled readonly style="color: red;
-            font-weight: bold" />
-            <span class="input-group-text">%</span>
-        </div>
-
-        <div class="input-group mb-3">
-            <span class="input-group-text">Number of items</span>
+            <span class="input-group-text">Total space</span>
             <input type="number" class="form-control" value="{{
-            statistics["number_of_items"] }}" disabled readonly style="color:
-            green; font-weight: bold" />
-            <span class="input-group-text">item</span>
-        </div>
-
-        <div class="input-group mb-3">
-            <span class="input-group-text">Total size</span>
-            <input type="number" class="form-control" value="{{
-            statistics["total_size"] }}" disabled readonly style="color: green;
-            font-weight: bold" />
+            current_statistics["total_space"] }}" disabled readonly
+            style="color: green; font-weight: bold" />
             <span class="input-group-text">MB</span>
         </div>
 
         <div class="input-group mb-3">
             <span class="input-group-text">Free space</span>
             <input type="number" class="form-control"
-            value="{{statistics["free_space"] }}" disabled readonly
+            value="{{current_statistics["free_space"] }}" disabled readonly
             style="color: green; font-weight: bold" />
             <span class="input-group-text">MB</span>
         </div>
 
         <div class="input-group mb-3">
+            <span class="input-group-text">Number of items</span>
+            <input type="number" class="form-control" value="{{
+            current_statistics["number_of_items"] }}" disabled readonly
+            style="color: green; font-weight: bold" />
+            <span class="input-group-text">item</span>
+        </div>
+
+        <div class="input-group mb-3">
             <span class="input-group-text">Replace policy</span>
             <input type="text" class="form-control"
-            value="{{statistics["replace-policy"] }}" disabled readonly
+            value="{{current_statistics["replace_policy"] }}" disabled readonly
             style="color: green; font-weight: bold" />
+        </div>
+
+        <a href="./cache/keys" style="font-size: small" class="badge badge-info"
+            >Current cache keys?</a
+        >
+    </div>
+</div>
+
+<div
+    class="text-center"
+    style="
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 50px;
+    "
+>
+    <div
+        style="
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2),
+                0 6px 20px 0 rgba(0, 0, 0, 0.19);
+            border-radius: 30px;
+            width: 50%;
+            background-color: rgb(33, 37, 41);
+            padding: 100px;
+            padding-bottom: 50px;
+            padding-top: 50px;
+            color: bisque;
+        "
+    >
+        <p style="margin-bottom: 50px; font-size: 30px; font-weight: bold">
+            Cache statistics past 10 minutes
+        </p>
+
+        <div class="input-group mb-3">
+            <span class="input-group-text">Hit rate</span>
+            <input type="text" class="form-control" value="{{
+            statistics_past_10_min["hit_rate"] }}" disabled readonly
+            style="color: green; font-weight: bold" />
+            <span class="input-group-text">%</span>
+        </div>
+
+        <div class="input-group mb-3">
+            <span class="input-group-text">Miss rate</span>
+            <input type="text" class="form-control" value="{{
+            statistics_past_10_min["miss_rate"] }}" disabled readonly
+            style="color: red; font-weight: bold" />
+            <span class="input-group-text">%</span>
         </div>
 
         <div class="input-group mb-3">
             <span class="input-group-text">Number of requests</span>
             <input type="text" class="form-control"
-            value="{{statistics["number_of_requests"] }}" disabled readonly
-            style="color: green; font-weight: bold" />
+            value="{{statistics_past_10_min["number_of_requests"] }}" disabled
+            readonly style="color: green; font-weight: bold" />
             <span class="input-group-text">request</span>
         </div>
 
@@ -85,4 +117,161 @@
         >
     </div>
 </div>
+
+<div
+    class="text-center"
+    style="
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 50px;
+    "
+>
+    <div
+        style="
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2),
+                0 6px 20px 0 rgba(0, 0, 0, 0.19);
+            border-radius: 30px;
+            width: 50%;
+            background-color: rgb(33, 37, 41);
+            padding: 100px;
+            padding-bottom: 50px;
+            padding-top: 50px;
+            color: bisque;
+        "
+    >
+        <p style="margin-bottom: 50px; font-size: 30px; font-weight: bold">
+            Cache statistics all times
+        </p>
+
+        <div class="input-group mb-3">
+            <span class="input-group-text">Hit rate</span>
+            <input type="text" class="form-control" value="{{
+            statistics_all_times["hit_rate"] }}" disabled readonly style="color:
+            green; font-weight: bold" />
+            <span class="input-group-text">%</span>
+        </div>
+
+        <div class="input-group mb-3">
+            <span class="input-group-text">Miss rate</span>
+            <input type="text" class="form-control" value="{{
+            statistics_all_times["miss_rate"] }}" disabled readonly
+            style="color: red; font-weight: bold" />
+            <span class="input-group-text">%</span>
+        </div>
+
+        <div class="input-group mb-3">
+            <span class="input-group-text">Number of requests</span>
+            <input type="text" class="form-control"
+            value="{{statistics_all_times["number_of_requests"] }}" disabled
+            readonly style="color: green; font-weight: bold" />
+            <span class="input-group-text">request</span>
+        </div>
+
+        <a href="./control" style="font-size: small" class="badge badge-info"
+            >Change cache settings?</a
+        >
+    </div>
+</div>
+
+<div
+    class="text-center"
+    style="
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 50px;
+    "
+>
+    <div
+        style="
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2),
+                0 6px 20px 0 rgba(0, 0, 0, 0.19);
+            border-radius: 30px;
+            width: 50%;
+            background-color: rgb(33, 37, 41);
+            padding: 100px;
+            padding-bottom: 50px;
+            padding-top: 50px;
+            color: bisque;
+        "
+    >
+        <p style="margin-bottom: 50px; font-size: 30px; font-weight: bold">
+            Cache statistics all times (Chart)
+        </p>
+
+        <div id="myPlot" style="width: 100%; max-width: 700px"></div>
+    </div>
+</div>
+
+<script>
+    var graphDiv = "myPlot"
+
+    var hits = {
+        x: {{ times1 }},
+        y: {{ hits }},
+        name: 'Hits',
+        marker: {
+            color: 'green',
+        }
+    };
+
+    var misses = {
+        x: {{ times1 }},
+        y: {{ misses }},
+        name: 'Misses',
+        marker: {
+            color: 'red',
+        }
+    };
+
+    var requests = {
+        x: {{ times1 }},
+        y: {{ requests }},
+        name: 'Requests',
+        marker: {
+            color: 'blue',
+        }
+    };
+
+    var size = {
+        x: {{ times2 }},
+        y: {{ sizes }},
+        name: 'Size',
+        marker: {
+            color: 'black',
+        }
+    };
+
+    var data = [hits, misses, requests, size];
+
+    // Define Layout
+    var layout = {
+        xaxis: {title: "time"},
+        title: "statistics"
+    };
+
+    // Display using Plotly
+    Plotly.newPlot(graphDiv, data, layout);
+
+    // Plotly.extendTraces(graphDiv, {y: [[rand()]]}, [0])
+
+    window.addEventListener("load", (event) => {
+        const myElement = document.getElementById("alert-cache-success");
+
+        {% if cleared %}
+            myElement.classList.toggle("show");
+            myElement.style.display = "block";
+        {% endif %}
+    });
+
+    window.addEventListener("load", (event) => {
+        const myElement = document.getElementById("alert-cache-updated-success");
+
+        {% if updated %}
+            myElement.classList.toggle("show");
+            myElement.style.display = "block";
+        {% endif %}
+    });
+</script>
 {% endblock %}

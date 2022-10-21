@@ -22,23 +22,28 @@
         "
     >
         <p style="margin-bottom: 25px; font-size: 30px; font-weight: bold">
-            All Keys
+            Cache Keys
         </p>
 
         {% if keys %}
-        <table class="table" id="myTable" style="color: white">
+        <table id="myTable" class="table" style="color: white">
             <thead>
                 <tr>
                     <th scope="col">#</th>
                     <th scope="col">Hash</th>
-                    <!-- <th scope="col"></th> -->
+                    <th scope="col">Image name</th>
+                    <th scope="col">Last time used</th>
+                    <th scope="col">Size (MB)</th>
                 </tr>
             </thead>
             <tbody>
-                {% for key in keys %}
+                {% for key in keys.keys(): %}
                 <tr>
                     <th scope="row"></th>
-                    <th scope="row">{{ key[0] }}</td>
+                    <th scope="row">{{ keys[key]["hash"] }}</th>
+                    <th scope="row">{{ keys[key]["name"] }}</th>
+                    <th scope="row">{{ keys[key]["lastTimeUsed"] }}</th>
+                    <th scope="row">{{ keys[key]["size"] }}</th>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -46,7 +51,7 @@
 
         {% else %}
         <p style="font-size: larger; font-weight: bold; color: red">
-            No keys found!
+            Cache is empty!
         </p>
         {% endif %}
 

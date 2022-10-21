@@ -33,7 +33,7 @@
                     placeholder="Cache size"
                     min="1"
                     max="4096"
-                    value="10"
+                    value="{{ size }}"
                     required
                 />
                 <span class="input-group-text">MB</span>
@@ -42,25 +42,15 @@
             <div class="input-group mb-3">
                 <label class="input-group-text">Replace policy</label>
                 <select class="form-select" name="replace-policy" required>
-                    <option disabled selected value>
-                        -- select a policy --
-                    </option>
+                    {% if replace_policy =="LRU" %}
                     <option value="1">Random Replacement</option>
+                    <option value="0" selected>Least Recently Used</option>
+                    {% else %}
+                    <option value="1" selected>Random Replacement</option>
                     <option value="0">Least Recently Used</option>
+                    {% endif %}
                 </select>
             </div>
-
-            <!-- <div class="form-check form-switch mb-3">
-                <input
-                    class="form-check-input danger"
-                    name="is-clear"
-                    type="checkbox"
-                    role="switch"
-                />
-                <label class="form-check-label" for="flexSwitchCheckDefault"
-                    >Clear cache</label
-                >
-            </div> -->
 
             <div class="mb-3">
                 <button
@@ -78,26 +68,104 @@
             </div>
         </form>
 
-        <form action="/clear" method="POSt">
-            <div class="mb-3">
-                <button
-                    class="btn btn-danger"
-                    type="submit"
-                    style="
-                        width: 100%;
-                        height: 40px;
-                        border-radius: 10px;
-                        font-weight: bold;
-                    "
-                >
-                    Clear cache
-                </button>
-            </div>
-        </form>
+        <div class="mb-3">
+            <button
+                id="clear"
+                class="btn btn-danger"
+                style="
+                    width: 100%;
+                    height: 40px;
+                    border-radius: 10px;
+                    font-weight: bold;
+                "
+            >
+                Clear cache
+            </button>
+        </div>
 
         <a href="/get" style="font-size: small" class="badge badge-info"
             >Get image?</a
         >
     </div>
 </div>
+
+<!-- Modal -->
+<div class="modal fade" id="modal">
+    <div class="modal-lg modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    Are you sure you want to clear cache?
+                </h5>
+            </div>
+            <div
+                class="modal-body"
+                style="justify-content: center; display: flex; width: 70%"
+            >
+                <form
+                    action="/clear"
+                    method="POST"
+                    style="width: 45%; margin-right: 10px"
+                >
+                    <button
+                        class="btn btn-danger"
+                        type="submit"
+                        style="
+                            width: 100%;
+                            height: 40px;
+                            border-radius: 10px;
+                            font-weight: bold;
+                            margin-right: 10px;
+                        "
+                    >
+                        Yes
+                    </button>
+                </form>
+                <button
+                    id="close"
+                    data-dismiss="dialog"
+                    class="btn btn-secondary"
+                    style="
+                        width: 45%;
+                        height: 40px;
+                        border-radius: 10px;
+                        font-weight: bold;
+                    "
+                >
+                    No
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const clear = document.getElementById('clear')
+    clear.addEventListener("click", () => {
+        $('#modal').modal('show')
+    });
+
+    const _close = document.getElementById('close')
+    _close.addEventListener("click", () => {
+        $('#modal').modal('hide')
+    });
+
+    window.addEventListener("load", (event) => {
+        const myElement = document.getElementById("alert-cache-success");
+
+        {% if cleared %}
+            myElement.classList.toggle("show");
+            myElement.style.display = "block";
+        {% endif %}
+    });
+
+    window.addEventListener("load", (event) => {
+        const myElement = document.getElementById("alert-cache-updated-success");
+
+        {% if updated %}
+            myElement.classList.toggle("show");
+            myElement.style.display = "block";
+        {% endif %}
+    });
+</script>
 {% endblock %}
