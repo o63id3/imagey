@@ -235,9 +235,6 @@ class Cache:
 # Cache
 cache = Cache()
 
-# Connection
-conn = connection()
-
 
 @app.route('/', methods=['GET'])
 def home():
