@@ -250,7 +250,6 @@ def home():
 @app.route('/add', methods=['GET', 'POST'])
 def store():
     if request.method == 'GET':
-        # Show add page
         return render_template("add.html", status=200)
 
     if request.method == 'POST':
@@ -265,7 +264,6 @@ def store():
         file_name = f"{hash}_{image.filename}"
         image.save(f"static/uploaded images/{file_name}")
 
-        # Check if hash exists
         cursor = conn.cursor()
         sql = f"SELECT image FROM images WHERE hash='{hash}'"
         numberOfHashes = cursor.execute(sql)
@@ -275,7 +273,7 @@ def store():
             sql = f"INSERT INTO images (hash, image) VALUES ('{hash}', '{file_name}')"
             cursor.execute(sql)
         else:
-            #! Delete the old image form disk
+            # If hash do exist delete old image and update with new one
             old_image = cursor.fetchone()[0]
             os.remove(f"static/uploaded images/{old_image}")
 
@@ -297,7 +295,6 @@ def store():
 @app.route('/get', methods=['GET', 'POST'])
 def show():
     if request.method == 'GET':
-        # Show get page
         return render_template("get.html", status=200)
 
     if request.method == 'POST':
