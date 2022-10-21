@@ -18,7 +18,7 @@ def connection():
     conn = pymysql.connect(host='localhost',
                            user='root',
                            password='',
-                           database='imagey'
+                           database='imagey',
                            autocommit=True)
     return conn
 
