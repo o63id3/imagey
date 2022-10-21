@@ -1,4 +1,4 @@
-/static/uploaded images
+/static/uploaded images/*
 .vscode
 .idea
 venv
