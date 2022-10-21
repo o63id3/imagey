@@ -326,7 +326,7 @@ def keys():
     cursor = conn.cursor()
 
     # Get all keys
-    numberOfKeys = cursor.execute("SELECT hash, size FROM images")
+    numberOfKeys = cursor.execute("SELECT hash, image, size FROM images")
 
     # Close connection
     cursor.close()
@@ -388,8 +388,8 @@ def statistics():
     cursor = conn.cursor()
 
     # ? Current statistics
-    current_statistics["total_space"] = cache.getSize()
-    current_statistics["free_space"] = cache.getFreeSpace()
+    current_statistics["total_space"] = "{0:.2f}".format(cache.getSize())
+    current_statistics["free_space"] = "{0:.2f}".format(cache.getFreeSpace())
     current_statistics["number_of_items"] = cache.getNumberOfItems()
     current_statistics["replace_policy"] = cache.getReplacePolicy()
 
