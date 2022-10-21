@@ -347,7 +347,6 @@ def control():
         return render_template("control.html", status=200, size=cache.getSize(), replace_policy=cache.getReplacePolicy())
 
     if request.method == 'POST':
-        cache.state()
         # Get post request parameters
         cache_size = (request.form["cache-size"])
         if int(request.form["replace-policy"]) == 0:
@@ -487,7 +486,6 @@ def statistics(cleared=False, updated=False):
         max_time = max(max(times1), max(times2))
 
         if max_time == max(times1):
-            print("hi")
             times2.append(max_time)
             sizes.append(sizes[len(sizes) - 1])
         else:
