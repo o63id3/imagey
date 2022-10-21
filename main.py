@@ -39,7 +39,7 @@ class Cache:
         self.number_of_requests_served = 0
 
         self.refreshConfiguration()
-        self.scheduler()
+        # self.scheduler()
 
     # Get image from cache
     def get(self, key: str):
@@ -152,12 +152,15 @@ class Cache:
         cursor = conn.cursor()
 
         count = cursor.execute(
-            "SELECT size, replace_policy FROM `cache` WHERE created_at = (SELECT MAX(created_at) FROM cache)")
+            "SELECT size, replace_policy FROM cache WHERE created_at = (SELECT MAX(created_at) FROM cache)")
 
         if count != 0:
             row = cursor.fetchone()
             self.setSize(row[0])
             self.replacment_policy = row[1]
+        else:
+            count = cursor.execute(
+                f"INSERT INTO cache(size, replace_policy) VALUES ({self.getSize()},'{self.replacment_policy}')")
 
         cursor.close()
         conn.close()
@@ -258,7 +261,7 @@ def store():
 
         # Get post request parameters
         hash = str(request.form["hash"])
-        image = request.files['image']
+        image = request.files["image"]
 
         # Upload image
         file_name = f"{hash}_{image.filename}"
@@ -304,7 +307,7 @@ def show():
         if image == None:
             return render_template("get.html",
                                    hash=hash,
-                                   message="Hash not found!"), 400
+                                   message="Hash not found!"), 404
         else:
             # Show get page
             return render_template("get.html",
