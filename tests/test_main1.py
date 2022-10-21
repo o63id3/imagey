@@ -1,7 +1,6 @@
 import pytest
 import sys
 import io
-import requests
 sys.path.append('../backend')
 import main
 
