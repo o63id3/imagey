@@ -1,5 +1,7 @@
 import pytest
 import sys
+import io
+import requests
 sys.path.append('../backend')
 import main
 
@@ -22,7 +24,7 @@ def runner(app):
     return main.app.test_cli_runner()
 
 
-# * Test home page -- Done
+# * Test home page
 def test_show_home_page(client):
     response = client.get("/")
     assert response.status_code == 200
@@ -34,18 +36,15 @@ def test_show_add_page(client):
     assert response.status_code == 200
 
 
-# def test_adding_image(client):
-#     f = open("C:\\Users\\Hussein\\Desktop\\DSC02035.JPEG", "rb")
-#     response = client.post("/add", headers={
-#         "Content-Type": "multipart/form-data"
-#     }, data={
-#         "hash": "123",
-#         "image": open('C:/Users/Hussein/Desktop/DSC02035.JPEG', 'rb'),
-#     })
-#     # assert response.status_code == 200
+def test_adding_image(client):
+    response = client.post("/add", data={
+        "hash": "123",
+        "image": (io.BytesIO(b"some initial text data"), 'test.jpeg')
+    }, content_type='multipart/form-data')
+    assert response.status_code == 201
 
 
-# * Test get page -- Done
+# * Test get page
 def test_show_get_page(client):
     response = client.get("/get")
     assert response.status_code == 200
@@ -65,13 +64,13 @@ def test_get_failure(client):
     assert response.status_code == 404
 
 
-# * Test keys page -- Done
+# * Test keys page
 def test_show_keys_page(client):
     response = client.get("/keys")
     assert response.status_code == 200
 
 
-# * Test control page -- Done
+# * Test control page
 def test_show_control_page(client):
     response = client.get("/control")
     assert response.status_code == 200
@@ -87,19 +86,19 @@ def test_setting_size_and_policy(client):
     assert main.cache.getReplacePolicy() == "RANDOM"
 
 
-# * Test statistics page -- Done
+# * Test statistics page
 def test_show_statistics_page(client):
     response = client.get("/statistics")
     assert response.status_code == 200
 
 
-# * Test cache keys page -- Done
+# * Test cache keys page
 def test_show_cache_keys_page(client):
     response = client.get("/cache/keys")
     assert response.status_code == 200
 
 
-# * Test cache clear -- Done
+# * Test cache clear
 def test_clear_cache_cleared(client):
     # Add image to cache
     response = client.post("/get", data={
