@@ -333,7 +333,6 @@ def keys():
     conn.close()
 
     if numberOfKeys > 0:
-        # Show keys page
         return render_template("keys.html", keys=cursor, status=200)
     else:
         return render_template("keys.html", status=200)
@@ -342,7 +341,6 @@ def keys():
 @app.route('/control', methods=['GET', 'POST'])
 def control():
     if request.method == 'GET':
-        # Show control page
         return render_template("control.html", status=200, size=cache.getSize(), replace_policy=cache.getReplacePolicy())
 
     if request.method == 'POST':
@@ -376,7 +374,6 @@ def control():
 @app.route('/clear', methods=['POST'])
 def clear():
     cache.clear()
-    # return redirect(url_for("statistics", cleared=True))
     return render_template("control.html", status=200, cleared=True, size=cache.getSize(), replace_policy=cache.getReplacePolicy())
 
 
