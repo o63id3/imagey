@@ -1,6 +1,7 @@
 import pytest
+import sys
+sys.path.append('../backend')
 import main
-import time
 
 
 @pytest.fixture()
@@ -33,13 +34,15 @@ def test_show_add_page(client):
     assert response.status_code == 200
 
 
-def test_adding_image(client):
-    f = open("C:\\Users\\Hussein\\Desktop\\DSC02035.JPEG", "rb")
-    response = client.post("/add", data={
-        "hash": "123",
-        "image": f,
-    })
-    # assert response.status_code == 200
+# def test_adding_image(client):
+#     f = open("C:\\Users\\Hussein\\Desktop\\DSC02035.JPEG", "rb")
+#     response = client.post("/add", headers={
+#         "Content-Type": "multipart/form-data"
+#     }, data={
+#         "hash": "123",
+#         "image": open('C:/Users/Hussein/Desktop/DSC02035.JPEG', 'rb'),
+#     })
+#     # assert response.status_code == 200
 
 
 # * Test get page -- Done
