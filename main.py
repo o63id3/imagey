@@ -244,13 +244,13 @@ cache = Cache()
 
 @app.route('/', methods=['GET'])
 def home():
-    return render_template('index.html', status=200)
+    return render_template('index.html'), 200
 
 
 @app.route('/add', methods=['GET', 'POST'])
 def store():
     if request.method == 'GET':
-        return render_template("add.html", status=200)
+        return render_template("add.html"), 200
 
     if request.method == 'POST':
         # Connect to database
@@ -286,16 +286,13 @@ def store():
         cursor.close()
         conn.close()
 
-        return render_template("add.html", status=201, added=True)
-
-        # Redirect to show page
-        return redirect(url_for("show"))
+        return render_template("add.html", added=True), 201
 
 
 @app.route('/get', methods=['GET', 'POST'])
 def show():
     if request.method == 'GET':
-        return render_template("get.html", status=200)
+        return render_template("get.html"), 200
 
     if request.method == 'POST':
         # Get post request parameters
@@ -307,14 +304,12 @@ def show():
         if image == None:
             return render_template("get.html",
                                    hash=hash,
-                                   message="Hash not found!",
-                                   status=400)
+                                   message="Hash not found!"), 400
         else:
             # Show get page
             return render_template("get.html",
                                    hash=hash,
-                                   image=image,
-                                   status=200)
+                                   image=image), 200
 
 
 @app.route('/keys', methods=['GET'])
@@ -333,15 +328,15 @@ def keys():
     conn.close()
 
     if numberOfKeys > 0:
-        return render_template("keys.html", keys=cursor, status=200)
+        return render_template("keys.html", keys=cursor), 200
     else:
-        return render_template("keys.html", status=200)
+        return render_template("keys.html"), 200
 
 
 @app.route('/control', methods=['GET', 'POST'])
 def control():
     if request.method == 'GET':
-        return render_template("control.html", status=200, size=cache.getSize(), replace_policy=cache.getReplacePolicy())
+        return render_template("control.html", size=cache.getSize(), replace_policy=cache.getReplacePolicy()), 200
 
     if request.method == 'POST':
         # Get post request parameters
@@ -368,13 +363,13 @@ def control():
         # Refresh
         cache.refreshConfiguration()
 
-        return render_template("control.html", status=200, updated=True, size=cache.getSize(), replace_policy=cache.getReplacePolicy())
+        return render_template("control.html", updated=True, size=cache.getSize(), replace_policy=cache.getReplacePolicy()), 200
 
 
 @app.route('/clear', methods=['POST'])
 def clear():
     cache.clear()
-    return render_template("control.html", status=200, cleared=True, size=cache.getSize(), replace_policy=cache.getReplacePolicy())
+    return render_template("control.html", cleared=True, size=cache.getSize(), replace_policy=cache.getReplacePolicy()), 200
 
 
 @app.route('/statistics', methods=['GET'])
@@ -493,12 +488,21 @@ def statistics():
     conn.close()
 
     # Show statistics page
-    return render_template("statistics.html", current_statistics=current_statistics, statistics_past_10_min=statistics_past_10_min, statistics_all_times=statistics_all_times, status=200, cleared=cleared, times1=times1, hits=hits, misses=misses, requests=requests, times2=times2, sizes=sizes)
+    return render_template("statistics.html",
+                           current_statistics=current_statistics,
+                           statistics_past_10_min=statistics_past_10_min,
+                           statistics_all_times=statistics_all_times,
+                           times1=times1,
+                           hits=hits,
+                           misses=misses,
+                           requests=requests,
+                           times2=times2,
+                           sizes=sizes), 200
 
 
 @app.route('/cache/keys', methods=['GET'])
 def cacheKeys():
-    return render_template("cachekeys.html", status=200, keys=cache.getCache())
+    return render_template("cachekeys.html",  keys=cache.getCache()), 200
 
 
 app.run(debug=True)
