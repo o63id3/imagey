@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 16, 2022 at 09:26 AM
+-- Generation Time: Oct 22, 2022 at 08:20 AM
 -- Server version: 10.4.24-MariaDB
 -- PHP Version: 8.1.6
 
@@ -27,12 +27,19 @@ SET time_zone = "+00:00";
 -- Table structure for table `cache`
 --
 
-CREATE OR REPLACE TABLE `cache` (
+CREATE TABLE `cache` (
   `id` int(11) NOT NULL,
   `size` int(11) NOT NULL,
   `replace_policy` varchar(100) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Dumping data for table `cache`
+--
+
+INSERT INTO `cache` (`size`, `replace_policy`, `created_at`) VALUES
+(1, 'LRU', '2022-10-21 12:11:28'),
 
 -- --------------------------------------------------------
 
@@ -40,11 +47,11 @@ CREATE OR REPLACE TABLE `cache` (
 -- Table structure for table `images`
 --
 
-CREATE OR REPLACE TABLE `images` (
+CREATE TABLE `images` (
   `hash` varchar(255) NOT NULL,
   `image` varchar(255) NOT NULL,
   `size` int(11) NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -54,7 +61,7 @@ CREATE OR REPLACE TABLE `images` (
 -- Table structure for table `replace_policies`
 --
 
-CREATE OR REPLACE TABLE `replace_policies` (
+CREATE TABLE `replace_policies` (
   `replace_policy` varchar(100) NOT NULL,
   `description` text NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -73,7 +80,7 @@ INSERT INTO `replace_policies` (`replace_policy`, `description`) VALUES
 -- Table structure for table `statistics`
 --
 
-CREATE OR REPLACE TABLE `statistics` (
+CREATE TABLE `statistics` (
   `id` int(11) NOT NULL,
   `hit` int(11) NOT NULL,
   `miss` int(11) NOT NULL,

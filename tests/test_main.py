@@ -1,5 +1,6 @@
 import pytest
 import sys
+import os
 import io
 sys.path.append('../backend')
 import main
@@ -47,7 +48,11 @@ def test_adding_image(client):
     sql = f"SELECT image FROM images WHERE hash='test'"
     numberOfHashes = cursor.execute(sql)
     assert numberOfHashes == 1
-
+    
+    sql = f"DELETE FROM images WHERE `hash` = 'test'"
+    cursor.execute(sql)
+    os.remove(f"static/uploaded images/test_test.jpeg")
+    
 
 # * Test get page
 def test_show_get_page(client):
