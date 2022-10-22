@@ -33,6 +33,7 @@
                     <th scope="col">Hash</th>
                     <th scope="col">Name</th>
                     <th scope="col">Size (MB)</th>
+                    <th scope="col">Is updated</th>
                     <!-- <th scope="col"></th> -->
                 </tr>
             </thead>
@@ -42,7 +43,8 @@
                     <th scope="row"></th>
                     <th scope="row">{{ key[0] }}</td>
                     <th scope="row">{{ key[1] }}</td>
-                    <th scope="row">{{ key[2] }}</td>
+                    <th scope="row">{{ "{0:.2f}".format(key[2]) }}</td>
+                    <th scope="row">{{ key[3] != key[4] }}</td>
                 </tr>
                 {% endfor %}
             </tbody>

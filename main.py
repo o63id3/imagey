@@ -39,7 +39,7 @@ class Cache:
         self.number_of_requests_served = 0
 
         self.refreshConfiguration()
-        self.scheduler()
+        # self.scheduler()
 
     # Get image from cache
     def get(self, key: str):
@@ -207,7 +207,7 @@ class Cache:
                 'name': self.cache[key]['ImageName'],
                 'size': "{0:.2f}".format(self.cache[key]['size'] / 1000 / 1000),
                 'lastTimeUsed': self.cache[key]['LastTimeUsed'],
-            }
+            }        
         return cache
 
     # Sets cache replacment policy
@@ -326,7 +326,7 @@ def keys():
     cursor = conn.cursor()
 
     # Get all keys
-    numberOfKeys = cursor.execute("SELECT hash, image, size FROM images")
+    numberOfKeys = cursor.execute("SELECT hash, image, (size / 1000 / 1000), UNIX_TIMESTAMP(created_at), UNIX_TIMESTAMP(updated_at) FROM images")
 
     # Close connection
     cursor.close()
@@ -472,11 +472,11 @@ def statistics():
         if min_time == min(times1):
             times2.insert(0, min_time)
             sizes.insert(0, sizes[0])
-        else:
-            times1.insert(0, min_time)
-            hits.insert(0, hits[0])
-            misses.insert(0, misses[0])
-            requests.insert(0, requests[0])
+        # else:
+        #     times1.insert(0, min_time)
+        #     hits.insert(0, hits[0])
+        #     misses.insert(0, misses[0])
+        #     requests.insert(0, requests[0])
 
 
         for i in range(0, len(times1)):

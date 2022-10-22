@@ -168,13 +168,13 @@
             <span class="input-group-text">request</span>
         </div>
 
-        <a href="./control" style="font-size: small" class="badge badge-info"
-            >Change cache settings?</a
+        <a style="font-size: small" class="badge badge-info" onclick="getS()"
+            >Cart?</a
         >
     </div>
 </div>
 
-<div
+<!-- <div
     class="text-center"
     style="
         display: flex;
@@ -200,61 +200,137 @@
             Cache statistics all times (Chart)
         </p>
 
-        <div id="myPlot" style="width: 100%; max-width: 700px"></div>
+    </div>
+</div> -->
+
+<!-- Modal -->
+<div
+    class="modal fade"
+    id="Cart"
+    tabindex="-1"
+    role="dialog"
+    aria-labelledby="CartTitle"
+    aria-hidden="true"
+>
+    <div class="modal-lg modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Statistics chart</h5>
+            </div>
+            <div
+                class="modal-body"
+                style="justify-content: center; display: flex"
+            >
+                <div id="myPlot" style="width: 100%; max-width: 700px"></div>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
-    var graphDiv = "myPlot"
+    function getS() {
+        console.log("asd")
+        $('#Cart').modal('show')
 
-    var hits = {
-        x: {{ times1 }},
-        y: {{ hits }},
-        name: 'Hits',
-        marker: {
-            color: 'green',
-        }
-    };
+        var graphDiv = "myPlot"
 
-    var misses = {
-        x: {{ times1 }},
-        y: {{ misses }},
-        name: 'Misses',
-        marker: {
-            color: 'red',
-        }
-    };
+        var hits = {
+            x: {{ times1 }},
+            y: {{ hits }},
+            name: 'Hits',
+            marker: {
+                color: 'green',
+            }
+        };
 
-    var requests = {
-        x: {{ times1 }},
-        y: {{ requests }},
-        name: 'Requests',
-        marker: {
-            color: 'blue',
-        }
-    };
+        var misses = {
+            x: {{ times1 }},
+            y: {{ misses }},
+            name: 'Misses',
+            marker: {
+                color: 'red',
+            }
+        };
 
-    var size = {
-        x: {{ times2 }},
-        y: {{ sizes }},
-        name: 'Size',
-        marker: {
-            color: 'black',
-        }
-    };
+        var requests = {
+            x: {{ times1 }},
+            y: {{ requests }},
+            name: 'Requests',
+            marker: {
+                color: 'blue',
+            }
+        };
 
-    var data = [hits, misses, requests, size];
+        var size = {
+            x: {{ times2 }},
+            y: {{ sizes }},
+            name: 'Size',
+            marker: {
+                color: 'black',
+            }
+        };
 
-    // Define Layout
-    var layout = {
-        xaxis: {title: "time"},
-        title: "statistics"
-    };
+        var data = [hits, misses, requests, size];
 
-    // Display using Plotly
-    Plotly.newPlot(graphDiv, data, layout);
+        // Define Layout
+        var layout = {
+            xaxis: {title: "time"},
+            title: "statistics"
+        };
 
-    // Plotly.extendTraces(graphDiv, {y: [[rand()]]}, [0])
+        // Display using Plotly
+        Plotly.newPlot(graphDiv, data, layout);
+    }
+
+
+    // var graphDiv = "myPlot"
+
+    // var hits = {
+    //     x: {{ times1 }},
+    //     y: {{ hits }},
+    //     name: 'Hits',
+    //     marker: {
+    //         color: 'green',
+    //     }
+    // };
+
+    // var misses = {
+    //     x: {{ times1 }},
+    //     y: {{ misses }},
+    //     name: 'Misses',
+    //     marker: {
+    //         color: 'red',
+    //     }
+    // };
+
+    // var requests = {
+    //     x: {{ times1 }},
+    //     y: {{ requests }},
+    //     name: 'Requests',
+    //     marker: {
+    //         color: 'blue',
+    //     }
+    // };
+
+    // var size = {
+    //     x: {{ times2 }},
+    //     y: {{ sizes }},
+    //     name: 'Size',
+    //     marker: {
+    //         color: 'black',
+    //     }
+    // };
+
+    // var data = [hits, misses, requests, size];
+
+    // // Define Layout
+    // var layout = {
+    //     xaxis: {title: "time"},
+    //     title: "statistics"
+    // };
+
+    // // Display using Plotly
+    // Plotly.newPlot(graphDiv, data, layout);
 
     window.addEventListener("load", (event) => {
         const myElement = document.getElementById("alert-cache-success");

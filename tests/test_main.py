@@ -37,10 +37,16 @@ def test_show_add_page(client):
 
 def test_adding_image(client):
     response = client.post("/add", data={
-        "hash": "123",
+        "hash": "test",
         "image": (io.BytesIO(b"some initial text data"), 'test.jpeg')
     }, content_type='multipart/form-data')
     assert response.status_code == 201
+    
+    conn = main.connection()
+    cursor = conn.cursor()
+    sql = f"SELECT image FROM images WHERE hash='test'"
+    numberOfHashes = cursor.execute(sql)
+    assert numberOfHashes == 1
 
 
 # * Test get page
@@ -51,14 +57,14 @@ def test_show_get_page(client):
 
 def test_get_success(client):
     response = client.post("/get", data={
-        "hash": "1"
+        "hash": "hash1"
     })
     assert response.status_code == 200
 
 
 def test_get_failure(client):
     response = client.post("/get", data={
-        "hash": "11"
+        "hash": "fail"
     })
     assert response.status_code == 404
 
@@ -101,7 +107,7 @@ def test_show_cache_keys_page(client):
 def test_clear_cache_cleared(client):
     # Add image to cache
     response = client.post("/get", data={
-        "hash": "1"
+        "hash": "hash1"
     })
     assert response.status_code == 200
     assert main.cache.getUsedSpace() != 0
