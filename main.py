@@ -3,7 +3,6 @@ import datetime
 import io
 import os
 import random
-from sqlite3 import Cursor
 import threading
 from collections import OrderedDict
 
@@ -205,7 +204,7 @@ class Cache:
             cache[key] = {
                 'hash': key,
                 'name': self.cache[key]['ImageName'],
-                'size': "{0:.2f}".format(self.cache[key]['size'] / 1000 / 1000),
+                'size': "{0:.2f}".format(self.cache[key]['size'] / 1024 / 1024),
                 'lastTimeUsed': self.cache[key]['LastTimeUsed'],
             }        
         return cache
@@ -326,7 +325,7 @@ def keys():
     cursor = conn.cursor()
 
     # Get all keys
-    numberOfKeys = cursor.execute("SELECT hash, image, (size / 1000 / 1000), UNIX_TIMESTAMP(created_at), UNIX_TIMESTAMP(updated_at) FROM images")
+    numberOfKeys = cursor.execute("SELECT hash, image, (size / 1024 / 1024), UNIX_TIMESTAMP(created_at), UNIX_TIMESTAMP(updated_at) FROM images")
 
     # Close connection
     cursor.close()
