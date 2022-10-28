@@ -38,7 +38,7 @@ class Cache:
         self.number_of_requests_served = 0
 
         self.refreshConfiguration()
-        self.scheduler()
+        # self.scheduler()
 
     # Get image from cache
     def get(self, key: str):
@@ -519,4 +519,4 @@ def cacheKeys():
     return render_template("cachekeys.html",  keys=cache.getCache()), 200
 
 
-app.run(debug=True)
+app.run(debug=True, port=80)
