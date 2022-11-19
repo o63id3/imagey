@@ -278,9 +278,12 @@ def store():
 
         # Upload image to aws s3
         client.upload_file(Filename=f"static/uploaded images/{file_name}", Bucket="imagey", Key=hash,)
-
+        
+        # Delete image from ec2
+        os.remove(f"static/uploaded images/{file_name}")
+        
         cursor = conn.cursor()
-        sql = f"SELECT image FROM images WHERE hash='{hash}'"
+        sql = f"SELECT image, hash FROM images WHERE hash='{hash}'"
         numberOfHashes = cursor.execute(sql)
 
         fileSize = os.path.getsize(f"static/uploaded images/{file_name}")
@@ -290,9 +293,11 @@ def store():
             sql = f"INSERT INTO images (hash, image, size) VALUES ('{hash}', '{file_name}', '{fileSize}')"
             cursor.execute(sql)
         else:
-            # If hash do exist delete old image and update with new one
-            old_image = cursor.fetchone()[0]
-            os.remove(f"static/uploaded images/{old_image}")
+            ## If hash do exist delete old image and update with new one
+            # old_image = cursor.fetchone()[0]
+            # os.remove(f"static/uploaded images/{old_image}")
+            
+            # Delete old image from s3
 
             # ? Update the image with the new one
             sql = f"UPDATE images SET image='{file_name}', size='{fileSize}' WHERE hash='{hash}'"
