@@ -73,9 +73,16 @@ class Cache:
 
             if numberOfHashes != 0:
                 row = cursor.fetchone()
+                
+                # Download image from s3
+                clinet.download_file(Bucket="imagey", Key=key, Filename=f"{row[0]}")
+                
                 path = f"static/uploaded images/{row[0]}"
                 image = self.put(key, path)
 
+                # Delete image from ec2
+                os.remove(path)
+                
                 cursor.close()
                 conn.close()
 
