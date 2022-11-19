@@ -6,6 +6,10 @@ import random
 import threading
 from collections import OrderedDict
 
+import boto3
+from db import USER, PASSWORD, HOST, DATABASE
+from aws_keys import access_key_id, secret_access_key
+
 import pymysql
 from flask import Flask, redirect, render_template, request, url_for
 from PIL import Image
@@ -14,18 +18,6 @@ app = Flask(__name__)
 
 HOST = "0.0.0.0"
 PORT = 80
-
-HOST = "0.0.0.0"
-PORT = 80
-
-
-# def connection():
-#     conn = pymysql.connect(host='imagey.cpbdnktynq7y.us-east-1.rds.amazonaws.com',
-#                            user='admin',
-#                            password='admin_123',
-#                            database='imagey',
-#                            autocommit=True)
-
 
 def connection():
     conn = pymysql.connect(host='localhost',
@@ -536,4 +528,5 @@ def cacheKeys():
     return render_template("cachekeys.html",  keys=cache.getCache()), 200
 
 
-app.run(debug=True, port=80)
+app.run(debug=True)
+# app.run(debug=True, port=PORT, host=HOST)
