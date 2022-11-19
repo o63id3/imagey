@@ -6,17 +6,27 @@ import random
 import threading
 from collections import OrderedDict
 
+import boto3
+
 import pymysql
 from flask import Flask, redirect, render_template, request, url_for
 from PIL import Image
 
+access_key = 'your_access_key'
+secret_access_key = 'your_secret_access_key'
+
+client = boto3.client('s3', aws_access_key_id=access_key, aws_secret_access_key=secret_access_key)
+bucket = 'imagey'
+
 app = Flask(__name__)
 
+HOST = "0.0.0.0"
+PORT = 80
 
 def connection():
-    conn = pymysql.connect(host='localhost',
-                           user='root',
-                           password='',
+    conn = pymysql.connect(host='imagey.cpbdnktynq7y.us-east-1.rds.amazonaws.com',
+                           user='admin',
+                           password='admin_123',
                            database='imagey',
                            autocommit=True)
     return conn
@@ -206,7 +216,7 @@ class Cache:
                 'name': self.cache[key]['ImageName'],
                 'size': "{0:.2f}".format(self.cache[key]['size'] / 1024 / 1024),
                 'lastTimeUsed': self.cache[key]['LastTimeUsed'],
-            }        
+            }
         return cache
 
     # Sets cache replacment policy
@@ -265,6 +275,8 @@ def store():
         # Upload image
         file_name = f"{hash}_{image.filename}"
         image.save(f"static/uploaded images/{file_name}")
+
+        clinet.upload_file(f"static/uploaded images/{file_name}", bucket, hash)
 
         cursor = conn.cursor()
         sql = f"SELECT image FROM images WHERE hash='{hash}'"
@@ -393,7 +405,7 @@ def statistics():
     current_statistics["replace_policy"] = cache.getReplacePolicy()
 
     # ? Statistics past 10 min
-    sql = "SELECT NVL(SUM(hit), 0), NVL(SUM(miss), 0) FROM statistics WHERE created_at >= date_sub(now(), interval 10 minute)"
+    sql = "SELECT ifnull(SUM(hit), 0), ifnull(SUM(miss), 0) FROM statistics WHERE created_at >= date_sub(now(), interval 10 minute)"
     cursor.execute(sql)
 
     row = cursor.fetchone()
@@ -407,12 +419,12 @@ def statistics():
         statistics_past_10_min["miss_rate"] = "{0:.2f}".format(
             100 - statistics_past_10_min["hit_rate"])
 
-    sql = "SELECT NVL(SUM(number_of_requests_served), 0) FROM statistics WHERE created_at >= date_sub(now(), interval 10 minute)"
+    sql = "SELECT ifnull(SUM(number_of_requests_served), 0) FROM statistics WHERE created_at >= date_sub(now(), interval 10 minute)"
     cursor.execute(sql)
     statistics_past_10_min["number_of_requests"] = cursor.fetchone()[0]
 
     # ? Statistics all times
-    sql = "SELECT NVL(SUM(hit), 0), NVL(SUM(miss), 0) FROM statistics"
+    sql = "SELECT ifnull(SUM(hit), 0), ifnull(SUM(miss), 0) FROM statistics"
     cursor.execute(sql)
 
     row = cursor.fetchone()
@@ -426,7 +438,7 @@ def statistics():
         statistics_all_times["miss_rate"] = "{0:.2f}".format(
             100 - statistics_all_times["hit_rate"])
 
-    sql = "SELECT NVL(SUM(number_of_requests_served), 0) FROM statistics"
+    sql = "SELECT ifnull(SUM(number_of_requests_served), 0) FROM statistics"
     cursor.execute(sql)
     statistics_all_times["number_of_requests"] = cursor.fetchone()[0]
 
@@ -519,4 +531,5 @@ def cacheKeys():
     return render_template("cachekeys.html",  keys=cache.getCache()), 200
 
 
-app.run(debug=True, port=80)
+app.run(debug=True, port=PORT, host=HOST)
+# app.run(debug=True, port=PORT, host=HOST, ssl_context=('cert.pem', 'key.pem'))
