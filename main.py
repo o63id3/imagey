@@ -305,9 +305,6 @@ def store():
             # # If hash do exist delete old image and update with new one
             # old_image = cursor.fetchone()[0]
             # os.remove(f"static/temp/{old_image}")
-            
-            # Delete old images from s3
-            client.delete_object(Bucket=bucket, Key=hash)
 
             # ? Update the image with the new one
             sql = f"UPDATE images SET image='{file_name}', size='{fileSize}' WHERE hash='{hash}'"
