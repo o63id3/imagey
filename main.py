@@ -6,19 +6,14 @@ import random
 import threading
 from collections import OrderedDict
 
-import boto3
 import pymysql
 from flask import Flask, redirect, render_template, request, url_for
 from PIL import Image
 
-from aws_keys import access_key_id, secret_access_key
-from db import HOST, PASSWORD, USER, PASSWORD, DATABASE
-
-client = boto3.client('s3', aws_access_key_id=access_key_id, aws_secret_access_key=secret_access_key)
-bucket = 'imagey'
-
 app = Flask(__name__)
 
+HOST = "0.0.0.0"
+PORT = 80
 
 HOST = "0.0.0.0"
 PORT = 80
@@ -33,10 +28,10 @@ PORT = 80
 
 
 def connection():
-    conn = pymysql.connect(host=HOST,
-                           user=USER,
-                           password=PASSWORD,
-                           database=DATABASE,
+    conn = pymysql.connect(host='localhost',
+                           user='root',
+                           password='',
+                           database='imagey',
                            autocommit=True)
     return conn
 
@@ -82,15 +77,8 @@ class Cache:
 
             if numberOfHashes != 0:
                 row = cursor.fetchone()
-                
-                # Download image from s3
-                client.download_file(Bucket=bucket, Key=key, Filename=f"static/temp/{row[0]}")
-                
-                path = f"static/temp/{row[0]}"
+                path = f"static/uploaded images/{row[0]}"
                 image = self.put(key, path)
-
-                # Delete image from ec2
-                os.remove(path)
 
                 cursor.close()
                 conn.close()
@@ -232,7 +220,7 @@ class Cache:
                 'name': self.cache[key]['ImageName'],
                 'size': "{0:.2f}".format(self.cache[key]['size'] / 1024 / 1024),
                 'lastTimeUsed': self.cache[key]['LastTimeUsed'],
-            }        
+            }
         return cache
 
     # Sets cache replacment policy
@@ -290,13 +278,10 @@ def store():
 
         # Upload image
         file_name = f"{hash}_{image.filename}"
-        image.save(f"static/temp/{file_name}")
-        
-        # Upload image to aws s3
-        client.upload_file(Filename=f"static/temp/{file_name}", Bucket=bucket, Key=hash,)
+        image.save(f"static/uploaded images/{file_name}")
 
         cursor = conn.cursor()
-        sql = f"SELECT image FROM images WHERE hash='{hash}'"
+        sql = f"SELECT image, hash FROM images WHERE hash='{hash}'"
         numberOfHashes = cursor.execute(sql)
 
         fileSize = os.path.getsize(f"static/temp/{file_name}")
@@ -309,9 +294,9 @@ def store():
             sql = f"INSERT INTO images (hash, image, size) VALUES ('{hash}', '{file_name}', '{fileSize}')"
             cursor.execute(sql)
         else:
-            # # If hash do exist delete old image and update with new one
-            # old_image = cursor.fetchone()[0]
-            # os.remove(f"static/temp/{old_image}")
+            # If hash do exist delete old image and update with new one
+            old_image = cursor.fetchone()[0]
+            os.remove(f"static/uploaded images/{old_image}")
 
             # ? Update the image with the new one
             sql = f"UPDATE images SET image='{file_name}', size='{fileSize}' WHERE hash='{hash}'"
@@ -425,7 +410,7 @@ def statistics():
     current_statistics["replace_policy"] = cache.getReplacePolicy()
 
     # ? Statistics past 10 min
-    sql = "SELECT NVL(SUM(hit), 0), NVL(SUM(miss), 0) FROM statistics WHERE created_at >= date_sub(now(), interval 10 minute)"
+    sql = "SELECT ifnull(SUM(hit), 0), ifnull(SUM(miss), 0) FROM statistics WHERE created_at >= date_sub(now(), interval 10 minute)"
     cursor.execute(sql)
 
     row = cursor.fetchone()
@@ -439,12 +424,12 @@ def statistics():
         statistics_past_10_min["miss_rate"] = "{0:.2f}".format(
             100 - statistics_past_10_min["hit_rate"])
 
-    sql = "SELECT NVL(SUM(number_of_requests_served), 0) FROM statistics WHERE created_at >= date_sub(now(), interval 10 minute)"
+    sql = "SELECT ifnull(SUM(number_of_requests_served), 0) FROM statistics WHERE created_at >= date_sub(now(), interval 10 minute)"
     cursor.execute(sql)
     statistics_past_10_min["number_of_requests"] = cursor.fetchone()[0]
 
     # ? Statistics all times
-    sql = "SELECT NVL(SUM(hit), 0), NVL(SUM(miss), 0) FROM statistics"
+    sql = "SELECT ifnull(SUM(hit), 0), ifnull(SUM(miss), 0) FROM statistics"
     cursor.execute(sql)
 
     row = cursor.fetchone()
@@ -458,7 +443,7 @@ def statistics():
         statistics_all_times["miss_rate"] = "{0:.2f}".format(
             100 - statistics_all_times["hit_rate"])
 
-    sql = "SELECT NVL(SUM(number_of_requests_served), 0) FROM statistics"
+    sql = "SELECT ifnull(SUM(number_of_requests_served), 0) FROM statistics"
     cursor.execute(sql)
     statistics_all_times["number_of_requests"] = cursor.fetchone()[0]
 
@@ -551,6 +536,4 @@ def cacheKeys():
     return render_template("cachekeys.html",  keys=cache.getCache()), 200
 
 
-app.run(debug=True)
-# app.run(debug=True, port=PORT, host=HOST)
-# app.run(debug=True, port=PORT, host=HOST, ssl_context=('cert.pem', 'key.pem'))
+app.run(debug=True, port=80)
