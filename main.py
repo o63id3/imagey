@@ -6,18 +6,37 @@ import random
 import threading
 from collections import OrderedDict
 
+import boto3
 import pymysql
 from flask import Flask, redirect, render_template, request, url_for
 from PIL import Image
 
+from aws_keys import access_key_id, secret_access_key
+from db import HOST, PASSWORD, USER, PASSWORD, DATABASE
+
+client = boto3.client('s3', aws_access_key_id=access_key_id, aws_secret_access_key=secret_access_key)
+bucket = 'imagey'
+
 app = Flask(__name__)
 
 
+HOST = "0.0.0.0"
+PORT = 80
+
+
+# def connection():
+#     conn = pymysql.connect(host='imagey.cpbdnktynq7y.us-east-1.rds.amazonaws.com',
+#                            user='admin',
+#                            password='admin_123',
+#                            database='imagey',
+#                            autocommit=True)
+
+
 def connection():
-    conn = pymysql.connect(host='localhost',
-                           user='root',
-                           password='',
-                           database='imagey',
+    conn = pymysql.connect(host=HOST,
+                           user=USER,
+                           password=PASSWORD,
+                           database=DATABASE,
                            autocommit=True)
     return conn
 
@@ -63,8 +82,15 @@ class Cache:
 
             if numberOfHashes != 0:
                 row = cursor.fetchone()
-                path = f"static/uploaded images/{row[0]}"
+                
+                # Download image from s3
+                client.download_file(Bucket=bucket, Key=key, Filename=f"static/temp/{row[0]}")
+                
+                path = f"static/temp/{row[0]}"
                 image = self.put(key, path)
+
+                # Delete image from ec2
+                os.remove(path)
 
                 cursor.close()
                 conn.close()
@@ -264,27 +290,33 @@ def store():
 
         # Upload image
         file_name = f"{hash}_{image.filename}"
-        image.save(f"static/uploaded images/{file_name}")
+        image.save(f"static/temp/{file_name}")
+        
+        # Upload image to aws s3
+        client.upload_file(Filename=f"static/temp/{file_name}", Bucket=bucket, Key=hash,)
 
         cursor = conn.cursor()
         sql = f"SELECT image FROM images WHERE hash='{hash}'"
         numberOfHashes = cursor.execute(sql)
 
-        fileSize = os.path.getsize(f"static/uploaded images/{file_name}")
+        fileSize = os.path.getsize(f"static/temp/{file_name}")
+
+        # Delete image from ec2
+        os.remove(f"static/temp/{file_name}")
 
         if numberOfHashes == 0:
             # If hash does not exist insert to database
             sql = f"INSERT INTO images (hash, image, size) VALUES ('{hash}', '{file_name}', '{fileSize}')"
             cursor.execute(sql)
         else:
-            # If hash do exist delete old image and update with new one
-            old_image = cursor.fetchone()[0]
-            os.remove(f"static/uploaded images/{old_image}")
+            # # If hash do exist delete old image and update with new one
+            # old_image = cursor.fetchone()[0]
+            # os.remove(f"static/temp/{old_image}")
 
             # ? Update the image with the new one
             sql = f"UPDATE images SET image='{file_name}', size='{fileSize}' WHERE hash='{hash}'"
             cursor.execute(sql)
-            cache.put(hash, f"static/uploaded images/{file_name}")
+            cache.put(hash, f"static/temp/{file_name}")
 
         # Close connection
         cursor.close()
@@ -519,4 +551,6 @@ def cacheKeys():
     return render_template("cachekeys.html",  keys=cache.getCache()), 200
 
 
-app.run(debug=True, port=80)
+app.run(debug=True)
+# app.run(debug=True, port=PORT, host=HOST)
+# app.run(debug=True, port=PORT, host=HOST, ssl_context=('cert.pem', 'key.pem'))

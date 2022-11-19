@@ -38,8 +38,7 @@ CREATE TABLE `cache` (
 -- Dumping data for table `cache`
 --
 
-INSERT INTO `cache` (`size`, `replace_policy`, `created_at`) VALUES
-(1, 'LRU', '2022-10-21 12:11:28');
+INSERT INTO `cache` (`size`, `replace_policy`, `created_at`) VALUES (1, 'LRU', '2022-10-21 12:11:28');
 
 -- --------------------------------------------------------
 
