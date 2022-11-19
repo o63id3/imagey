@@ -26,10 +26,10 @@ app = Flask(__name__)
 
 
 def connection():
-    conn = pymysql.connect(host='localhost',
-                           user='root',
-                           password='',
-                           database='imagey',
+    conn = pymysql.connect(host=HOST,
+                           user=USER,
+                           password=PASSWORD,
+                           database=DATABASE,
                            autocommit=True)
     return conn
 
