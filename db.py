@@ -1,4 +1,4 @@
-HOST = 'your host'
-USER = 'your user'
-PASSWORD = 'your password'
-DATABASE = 'your database'
+HOST = 'loaclhost'
+USER = 'root'
+PASSWORD = ''
+DATABASE = 'imagey'

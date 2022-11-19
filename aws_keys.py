@@ -1,2 +1,2 @@
-access_key_id = 'your aws access key'
-secret_access_key = 'your aws secret access key'
+access_key_id = 'AKIARERTDKXNCCKM73VH'
+secret_access_key = 'vtbcjVuBBCbjSQQdtLOrzPutHCNgRy2pRFBJv0e0'

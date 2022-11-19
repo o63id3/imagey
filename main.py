@@ -14,10 +14,16 @@ import pymysql
 from flask import Flask, redirect, render_template, request, url_for
 from PIL import Image
 
-app = Flask(__name__)
 
 HOST = "0.0.0.0"
 PORT = 80
+
+client = boto3.client('s3', aws_access_key_id=access_key_id, aws_secret_access_key=secret_access_key)
+bucket = 'imagey'
+
+
+app = Flask(__name__)
+
 
 def connection():
     conn = pymysql.connect(host='localhost',
@@ -69,8 +75,15 @@ class Cache:
 
             if numberOfHashes != 0:
                 row = cursor.fetchone()
-                path = f"static/uploaded images/{row[0]}"
+                path = f"static/temp/{row[0]}"
+                
+                # Download image from s3
+                client.download_file(Bucket=bucket, Key=key, Filename=path)
+                
                 image = self.put(key, path)
+                
+                # Delete image from ec2
+                os.remove(path)
 
                 cursor.close()
                 conn.close()
@@ -270,7 +283,10 @@ def store():
 
         # Upload image
         file_name = f"{hash}_{image.filename}"
-        image.save(f"static/uploaded images/{file_name}")
+        image.save(f"static/temp/{file_name}")
+
+        # Upload image to s3
+        client.upload_file(Filename=f"static/temp/{file_name}", Bucket=bucket, Key=hash,)
 
         cursor = conn.cursor()
         sql = f"SELECT image, hash FROM images WHERE hash='{hash}'"
@@ -288,7 +304,7 @@ def store():
         else:
             # If hash do exist delete old image and update with new one
             old_image = cursor.fetchone()[0]
-            os.remove(f"static/uploaded images/{old_image}")
+            os.remove(f"static/temp/{old_image}")
 
             # ? Update the image with the new one
             sql = f"UPDATE images SET image='{file_name}', size='{fileSize}' WHERE hash='{hash}'"
