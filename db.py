@@ -1,4 +1,4 @@
-HOST = 'localhost'
-USER = 'root'
-PASSWORD = ''
-DATABASE = 'imagey'
+_HOST = 'localhost'
+_USER = 'root'
+_PASSWORD = ''
+_DATABASE = 'imagey'

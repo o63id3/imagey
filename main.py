@@ -7,7 +7,7 @@ import threading
 from collections import OrderedDict
 
 import boto3
-from db import USER, PASSWORD, HOST, DATABASE
+from db import _USER, _PASSWORD, _HOST, _DATABASE
 from aws_keys import access_key_id, secret_access_key
 
 import pymysql
@@ -26,10 +26,10 @@ app = Flask(__name__)
 
 
 def connection():
-    conn = pymysql.connect(host=HOST,
-                           user=USER,
-                           password=PASSWORD,
-                           database=DATABASE,
+    conn = pymysql.connect(host=_HOST,
+                           user=_USER,
+                           password=_PASSWORD,
+                           database=_DATABASE,
                            autocommit=True)
     return conn
 
