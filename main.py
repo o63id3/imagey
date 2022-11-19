@@ -276,7 +276,8 @@ def store():
         file_name = f"{hash}_{image.filename}"
         image.save(f"static/uploaded images/{file_name}")
 
-        clinet.upload_file(f"static/uploaded images/{file_name}", bucket, hash)
+        # Upload image to aws s3
+        clinet.upload_file(Filename=f"static/uploaded images/{file_name}", Bucket="imagey", Key=hash,)
 
         cursor = conn.cursor()
         sql = f"SELECT image FROM images WHERE hash='{hash}'"
