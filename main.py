@@ -309,7 +309,16 @@ def store():
             # ? Update the image with the new one
             sql = f"UPDATE images SET image='{file_name}', size='{fileSize}' WHERE hash='{hash}'"
             cursor.execute(sql)
-            cache.put(hash, f"static/temp/{file_name}")
+            
+            path = f"static/temp/{file_name}"
+            
+            # Download image from s3
+            client.download_file(Bucket=bucket, Key=hash, Filename=path)
+            
+            cache.put(hash, path)
+            
+            # Delete image from ec2
+            os.remove(path)
 
         # Close connection
         cursor.close()
