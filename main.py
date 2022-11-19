@@ -310,15 +310,17 @@ def store():
             sql = f"UPDATE images SET image='{file_name}', size='{fileSize}' WHERE hash='{hash}'"
             cursor.execute(sql)
             
-            path = f"static/temp/{file_name}"
+            cache.invalidateKey(hash)
             
-            # Download image from s3
-            client.download_file(Bucket=bucket, Key=hash, Filename=path)
+            # path = f"static/temp/{file_name}"
             
-            cache.put(hash, path)
+            # # Download image from s3
+            # client.download_file(Bucket=bucket, Key=hash, Filename=path)
             
-            # Delete image from ec2
-            os.remove(path)
+            # cache.put(hash, path)
+            
+            # # Delete image from ec2
+            # os.remove(path)
 
         # Close connection
         cursor.close()
