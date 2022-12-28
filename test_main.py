@@ -38,19 +38,17 @@ def test_show_add_page(client):
 def test_adding_image(client):
     response = client.post("/add", data={
         "hash": "test",
-        "image": (io.BytesIO(b"some initial text data"), 'test.jpeg')
-    }, content_type='multipart/form-data')
+        "image": (open('test.jpeg', 'rb'), 'test.jpeg')
+    })
     assert response.status_code == 201
     
     conn = main.connection()
     cursor = conn.cursor()
     sql = f"SELECT image FROM images WHERE hash='test'"
     numberOfHashes = cursor.execute(sql)
+    cursor.close()
+    conn.close()
     assert numberOfHashes == 1
-    
-    sql = f"DELETE FROM images WHERE `hash` = 'test'"
-    cursor.execute(sql)
-    os.remove(f"static/uploaded images/test_test.jpeg")
     
 
 # * Test get page
@@ -61,14 +59,14 @@ def test_show_get_page(client):
 
 def test_get_success(client):
     response = client.post("/get", data={
-        "hash": "hash1"
+        "hash": "test"
     })
     assert response.status_code == 200
 
 
 def test_get_failure(client):
     response = client.post("/get", data={
-        "hash": "fail"
+        "hash": "this key does not exist"
     })
     assert response.status_code == 404
 
@@ -111,7 +109,7 @@ def test_show_cache_keys_page(client):
 def test_clear_cache_cleared(client):
     # Add image to cache
     response = client.post("/get", data={
-        "hash": "hash1"
+        "hash": "test"
     })
     assert response.status_code == 200
     assert main.cache.getUsedSpace() != 0
@@ -120,3 +118,13 @@ def test_clear_cache_cleared(client):
     response = client.post("/clear")
     assert response.status_code == 200
     assert main.cache.getUsedSpace() == 0
+    
+    # Delete testing image
+    conn = main.connection()
+    cursor = conn.cursor()
+    sql = f"DELETE FROM images WHERE `hash` = 'test'"
+    cursor.execute(sql)
+    cursor.close()
+    conn.close()
+    
+    main.client.delete_object(Bucket=main.bucket, Key='test')
